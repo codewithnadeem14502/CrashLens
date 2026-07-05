@@ -3,8 +3,15 @@ const Project = require("../models/project-model");
 const logger = require("../utils/logger");
 const { buildDsn, generateDsnPublicKey } = require("../utils/dsn");
 const {
+  publishProjectArchived,
+  publishProjectCreated,
+  publishProjectDsnRegenerated,
+  publishProjectUpdated,
+} = require("../events/project-events");
+const {
   ApiError,
   DefaultEnvironment,
+  ProjectEnvironments,
   ProjectStatus,
   asyncHandler,
   slugify,
@@ -66,10 +73,10 @@ const normalizeEnvironment = (environment) => {
 
   const normalized = environment.trim().toLowerCase();
 
-  if (!/^[a-z0-9][a-z0-9-_]{1,79}$/.test(normalized)) {
+  if (!Object.values(ProjectEnvironments).includes(normalized)) {
     throw new ApiError(
       400,
-      "environment must be 2-80 characters and contain only letters, numbers, hyphen, or underscore",
+      `environment must be one of: ${Object.values(ProjectEnvironments).join(", ")}`,
     );
   }
 
@@ -219,6 +226,8 @@ const createProject = asyncHandler(async (req, res) => {
     `Created project ${project._id} for organization ${organizationId} by user ${createdBy}`,
   );
 
+  await publishProjectCreated(project);
+
   return res.status(201).json({
     success: true,
     message: "Project created successfully",
@@ -252,6 +261,7 @@ const getProject = asyncHandler(async (req, res) => {
   const project = await findProjectForRequest({
     projectId: req.params.projectId,
     organizationId: req.user.organizationId,
+    includeDsn: true,
   });
 
   return res.status(200).json({
@@ -268,6 +278,7 @@ const updateProject = asyncHandler(async (req, res) => {
   const project = await findProjectForRequest({
     projectId: req.params.projectId,
     organizationId: req.user.organizationId,
+    includeDsn: true,
   });
 
   if (project.status === ProjectStatus.ARCHIVED) {
@@ -304,6 +315,8 @@ const updateProject = asyncHandler(async (req, res) => {
 
   logger.info(`Updated project ${project._id} by user ${req.user.sub}`);
 
+  await publishProjectUpdated(project);
+
   return res.status(200).json({
     success: true,
     message: "Project updated successfully",
@@ -336,6 +349,8 @@ const archiveProject = asyncHandler(async (req, res) => {
   await project.save();
 
   logger.info(`Archived project ${project._id} by user ${req.user.sub}`);
+
+  await publishProjectArchived(project);
 
   return res.status(200).json({
     success: true,
@@ -373,6 +388,7 @@ const regenerateProjectDsn = asyncHandler(async (req, res) => {
     throw new ApiError(409, "Cannot regenerate DSN for archived project");
   }
 
+  const oldDsnPublicKey = project.dsnPublicKey;
   const dsn = await createUniqueProjectDsn(project._id);
 
   project.dsn = dsn.dsn;
@@ -381,6 +397,8 @@ const regenerateProjectDsn = asyncHandler(async (req, res) => {
   await project.save();
 
   logger.warn(`Regenerated DSN for project ${project._id} by user ${req.user.sub}`);
+
+  await publishProjectDsnRegenerated({ project, oldDsnPublicKey });
 
   return res.status(200).json({
     success: true,

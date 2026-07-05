@@ -26,7 +26,13 @@ const ProjectStatus = Object.freeze({
   ARCHIVED: "archived",
 });
 
-const DefaultEnvironment = "production";
+const ProjectEnvironments = Object.freeze({
+  DEVELOPMENT: "development",
+  STAGING: "staging",
+  PRODUCTION: "production",
+});
+
+const DefaultEnvironment = ProjectEnvironments.PRODUCTION;
 
 const SENSITIVE_KEYS = new Set([
   "password",
@@ -80,6 +86,7 @@ module.exports = {
   Roles,
   Permissions,
   ProjectStatus,
+  ProjectEnvironments,
   DefaultEnvironment,
   ApiError,
   asyncHandler,

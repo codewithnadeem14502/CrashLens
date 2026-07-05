@@ -1,5 +1,9 @@
 const mongoose = require("mongoose");
-const { DefaultEnvironment, ProjectStatus } = require("../utils/constants");
+const {
+  DefaultEnvironment,
+  ProjectEnvironments,
+  ProjectStatus,
+} = require("../utils/constants");
 
 const projectSchema = new mongoose.Schema(
   {
@@ -39,6 +43,7 @@ const projectSchema = new mongoose.Schema(
       required: true,
       trim: true,
       lowercase: true,
+      enum: Object.values(ProjectEnvironments),
       maxlength: 80,
       default: DefaultEnvironment,
     },

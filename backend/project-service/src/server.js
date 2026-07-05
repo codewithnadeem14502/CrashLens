@@ -11,6 +11,7 @@ const { redactSensitiveFields } = require("./utils/constants");
 const { RateLimiterRedis } = require("rate-limiter-flexible");
 const { rateLimit } = require("express-rate-limit");
 const { RedisStore } = require("rate-limit-redis");
+const { closeRabbitMQ, connectToRabbitMQ } = require("./utils/rabbitmq");
 
 const app = express();
 const PORT = process.env.PORT || 3002;
@@ -101,11 +102,31 @@ app.use("/api/projects", projectRoutes);
 
 app.use(errorHandler);
 
-app.listen(PORT, () => {
-  logger.info(`project service running on port ${PORT}`);
-});
+async function startServer() {
+  try {
+    await connectToRabbitMQ();
+    app.listen(PORT, () => {
+      logger.info(`project service running on port ${PORT}`);
+    });
+  } catch (error) {
+    logger.error("Failed to connect to server", error);
+    process.exit(1);
+  }
+}
+
+startServer();
 
 //unhandled promise rejection
 process.on("unhandledRejection", (reason, promise) => {
   logger.error("Unhandled Rejection at", promise, "reason:", reason);
+});
+
+process.on("SIGTERM", async () => {
+  await closeRabbitMQ();
+  process.exit(0);
+});
+
+process.on("SIGINT", async () => {
+  await closeRabbitMQ();
+  process.exit(0);
 });
