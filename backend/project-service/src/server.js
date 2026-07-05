@@ -5,7 +5,7 @@ const cors = require("cors");
 const helmet = require("helmet");
 const errorHandler = require("./middleware/errorHandler");
 const logger = require("./utils/logger");
-const authRoutes = require("./routes/auth-route");
+const projectRoutes = require("./routes/project-route");
 const connectDatabase = require("./config/database");
 const { redactSensitiveFields } = require("./utils/constants");
 const { RateLimiterRedis } = require("rate-limiter-flexible");
@@ -13,7 +13,7 @@ const { rateLimit } = require("express-rate-limit");
 const { RedisStore } = require("rate-limit-redis");
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3002;
 
 app.set("trust proxy", 1);
 
@@ -42,7 +42,7 @@ app.use((req, res, next) => {
 // protects the service from accidental or low-effort request floods.
 const burstLimiter = new RateLimiterRedis({
   storeClient: redisClient,
-  keyPrefix: "auth-service:burst",
+  keyPrefix: "project-service:burst",
   points: 10,
   duration: 1,
 });
@@ -80,30 +80,29 @@ const sensitiveEndpointsLimiter = rateLimit({
   },
   passOnStoreError: true,
   store: new RedisStore({
-    prefix: "auth-service:sensitive:",
+    prefix: "project-service:sensitive:",
     sendCommand: (...args) => redisClient.call(args[0], ...args.slice(1)),
   }),
 });
-
-app.post("/api/auth/organizations", sensitiveEndpointsLimiter);
-app.post("/api/auth/login", sensitiveEndpointsLimiter);
-app.post("/api/auth/refresh-token", sensitiveEndpointsLimiter);
-app.post("/api/auth/logout", sensitiveEndpointsLimiter);
+app.post("/api/projects", sensitiveEndpointsLimiter);
+app.patch("/api/projects/:projectId", sensitiveEndpointsLimiter);
+app.delete("/api/projects/:projectId", sensitiveEndpointsLimiter);
+app.post("/api/projects/:projectId/regenerate-dsn", sensitiveEndpointsLimiter);
 
 app.get("/health", (req, res) => {
   res.status(200).json({
     success: true,
-    service: "auth-service",
+    service: "project-service",
     status: "ok",
   });
 });
 
-app.use("/api/auth", authRoutes);
+app.use("/api/projects", projectRoutes);
 
 app.use(errorHandler);
 
 app.listen(PORT, () => {
-  logger.info(`auth service running on port ${PORT}`);
+  logger.info(`project service running on port ${PORT}`);
 });
 
 //unhandled promise rejection
