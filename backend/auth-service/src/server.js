@@ -87,6 +87,7 @@ const sensitiveEndpointsLimiter = rateLimit({
 
 app.post("/api/auth/organizations", sensitiveEndpointsLimiter);
 app.post("/api/auth/login", sensitiveEndpointsLimiter);
+app.patch("/api/auth/me/password", sensitiveEndpointsLimiter);
 app.post("/api/auth/refresh-token", sensitiveEndpointsLimiter);
 app.post("/api/auth/logout", sensitiveEndpointsLimiter);
 

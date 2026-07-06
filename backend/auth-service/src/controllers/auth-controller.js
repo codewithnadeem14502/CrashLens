@@ -48,7 +48,12 @@ const sanitizeMembership = (membership, permissions) => ({
   joinedAt: membership.joinedAt,
 });
 
-const issueTokenPair = async ({ user, membership, req }) => {
+const issueTokenPair = async ({
+  user,
+  membership,
+  req,
+  tokenFamilyId = null,
+}) => {
   const permissions = RolePermissions[membership.role] || [];
   const accessToken = signAccessToken({
     user,
@@ -57,7 +62,7 @@ const issueTokenPair = async ({ user, membership, req }) => {
   });
   const refreshToken = generateRefreshToken();
 
-  const refreshTokenDoc = await RefreshToken.create({
+  const refreshTokenDoc = new RefreshToken({
     userId: user._id,
     organizationId: membership.organizationId,
     membershipId: membership._id,
@@ -67,6 +72,9 @@ const issueTokenPair = async ({ user, membership, req }) => {
     userAgent: req.get("user-agent"),
   });
 
+  refreshTokenDoc.tokenFamilyId = tokenFamilyId || refreshTokenDoc._id;
+  await refreshTokenDoc.save();
+
   return {
     accessToken,
     refreshToken,
@@ -75,95 +83,37 @@ const issueTokenPair = async ({ user, membership, req }) => {
   };
 };
 
-const validateLoginPayload = (payload) => {
-  const errors = [];
+const getRefreshTokenFamilyFilter = (refreshTokenDoc) => {
+  const familyId = refreshTokenDoc.tokenFamilyId || refreshTokenDoc._id;
 
-  if (!payload.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(payload.email)) {
-    errors.push("email must be a valid email address");
-  }
-
-  if (!payload.password) {
-    errors.push("password is required");
-  }
-
-  if (payload.organizationSlug && typeof payload.organizationSlug !== "string") {
-    errors.push("organizationSlug must be a string");
-  }
-
-  if (errors.length) {
-    throw new ApiError(400, "Invalid login payload", errors);
-  }
+  return {
+    $or: [{ tokenFamilyId: familyId }, { _id: familyId }],
+  };
 };
 
-const validateCreateMemberPayload = (payload) => {
-  const errors = [];
+const revokeRefreshTokenFamily = async ({ refreshTokenDoc, req, reason }) => {
+  const now = new Date();
+  const result = await RefreshToken.updateMany(
+    getRefreshTokenFamilyFilter(refreshTokenDoc),
+    {
+      $set: {
+        revokedAt: now,
+        revokedByIp: req.ip,
+        familyRevokedAt: now,
+      },
+    },
+  );
 
-  if (!payload.name || payload.name.trim().length < 2) {
-    errors.push("name must be at least 2 characters");
-  }
-
-  if (!payload.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(payload.email)) {
-    errors.push("email must be a valid email address");
-  }
-
-  if (!payload.password || payload.password.length < 8) {
-    errors.push("password must be at least 8 characters");
-  }
-
-  if (!AssignableMemberRoles.includes(payload.role)) {
-    errors.push(`role must be one of: ${AssignableMemberRoles.join(", ")}`);
-  }
-
-  if (errors.length) {
-    throw new ApiError(400, "Invalid member payload", errors);
-  }
-};
-
-const validateUpdateMemberRolePayload = (payload) => {
-  const errors = [];
-
-  if (!AssignableMemberRoles.includes(payload.role)) {
-    errors.push(`role must be one of: ${AssignableMemberRoles.join(", ")}`);
-  }
-
-  if (errors.length) {
-    throw new ApiError(400, "Invalid member role payload", errors);
-  }
-};
-
-const validateOrganizationAdminPayload = (payload) => {
-  const errors = [];
-  const organizationName = payload.organizationName;
-  const admin = payload.admin || {};
-
-  if (!organizationName || organizationName.trim().length < 2) {
-    errors.push("organizationName must be at least 2 characters");
-  }
-
-  if (!admin.name || admin.name.trim().length < 2) {
-    errors.push("admin.name must be at least 2 characters");
-  }
-
-  if (!admin.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(admin.email)) {
-    errors.push("admin.email must be a valid email address");
-  }
-
-  if (!admin.password || admin.password.length < 8) {
-    errors.push("admin.password must be at least 8 characters");
-  }
-
-  if (errors.length) {
-    throw new ApiError(400, "Invalid organization admin payload", errors);
-  }
+  logger.warn(
+    `Refresh token family revoked for user ${refreshTokenDoc.userId}: ${reason}. revoked=${result.modifiedCount}`,
+  );
 };
 
 const createOrganizationWithAdmin = asyncHandler(async (req, res) => {
-  validateOrganizationAdminPayload(req.body);
-
-  const organizationName = req.body.organizationName.trim();
+  const organizationName = req.body.organizationName;
   const adminPayload = {
-    name: req.body.admin.name.trim(),
-    email: req.body.admin.email.trim().toLowerCase(),
+    name: req.body.admin.name,
+    email: req.body.admin.email,
     password: req.body.admin.password,
   };
   const organizationSlug = slugify(organizationName);
@@ -190,7 +140,7 @@ const createOrganizationWithAdmin = asyncHandler(async (req, res) => {
     createdUser = await User.create({
       name: adminPayload.name,
       email: adminPayload.email,
-      passwordHash: hashPassword(adminPayload.password),
+      passwordHash: await hashPassword(adminPayload.password),
     });
 
     createdOrganization = await Organization.create({
@@ -248,9 +198,7 @@ const createOrganizationWithAdmin = asyncHandler(async (req, res) => {
 });
 
 const login = asyncHandler(async (req, res) => {
-  validateLoginPayload(req.body);
-
-  const email = req.body.email.trim().toLowerCase();
+  const email = req.body.email;
   const organizationSlug = req.body.organizationSlug
     ? slugify(req.body.organizationSlug)
     : null;
@@ -261,7 +209,10 @@ const login = asyncHandler(async (req, res) => {
     throw new ApiError(401, "Invalid email or password");
   }
 
-  const passwordMatches = verifyPassword(req.body.password, user.passwordHash);
+  const passwordMatches = await verifyPassword(
+    req.body.password,
+    user.passwordHash,
+  );
 
   if (!passwordMatches) {
     logger.warn(`Failed login attempt for email ${email}`);
@@ -314,8 +265,6 @@ const login = asyncHandler(async (req, res) => {
 });
 
 const createOrganizationMember = asyncHandler(async (req, res) => {
-  validateCreateMemberPayload(req.body);
-
   if (req.user.organizationId !== req.params.organizationId) {
     throw new ApiError(403, "Permission denied for this organization");
   }
@@ -327,8 +276,8 @@ const createOrganizationMember = asyncHandler(async (req, res) => {
   }
 
   const memberPayload = {
-    name: req.body.name.trim(),
-    email: req.body.email.trim().toLowerCase(),
+    name: req.body.name,
+    email: req.body.email,
     password: req.body.password,
     role: req.body.role,
   };
@@ -339,7 +288,7 @@ const createOrganizationMember = asyncHandler(async (req, res) => {
     user = await User.create({
       name: memberPayload.name,
       email: memberPayload.email,
-      passwordHash: hashPassword(memberPayload.password),
+      passwordHash: await hashPassword(memberPayload.password),
     });
   }
 
@@ -383,9 +332,59 @@ const createOrganizationMember = asyncHandler(async (req, res) => {
   });
 });
 
-const updateOrganizationMemberRole = asyncHandler(async (req, res) => {
-  validateUpdateMemberRolePayload(req.body);
+const updatePassword = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user.sub).select("+passwordHash");
 
+  if (!user || user.status !== AccountStatus.ACTIVE) {
+    throw new ApiError(401, "Authentication session is no longer active");
+  }
+
+  const passwordMatches = await verifyPassword(
+    req.body.currentPassword,
+    user.passwordHash,
+  );
+
+  if (!passwordMatches) {
+    throw new ApiError(401, "Current password is incorrect");
+  }
+
+  const passwordReused = await verifyPassword(
+    req.body.newPassword,
+    user.passwordHash,
+  );
+
+  if (passwordReused) {
+    throw new ApiError(
+      400,
+      "New password must be different from current password",
+    );
+  }
+
+  user.passwordHash = await hashPassword(req.body.newPassword);
+  await user.save();
+
+  await RefreshToken.updateMany(
+    {
+      userId: user._id,
+      revokedAt: null,
+    },
+    {
+      $set: {
+        revokedAt: new Date(),
+        revokedByIp: req.ip,
+      },
+    },
+  );
+
+  logger.info(`User ${user._id} updated password and revoked active sessions`);
+
+  return res.status(200).json({
+    success: true,
+    message: "Password updated successfully. Please login again.",
+  });
+});
+
+const updateOrganizationMemberRole = asyncHandler(async (req, res) => {
   if (req.user.organizationId !== req.params.organizationId) {
     throw new ApiError(403, "Permission denied for this organization");
   }
@@ -513,20 +512,45 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     throw new ApiError(400, "refreshToken is required");
   }
 
-  const existingToken = await RefreshToken.findOne({
-    tokenHash: hashToken(refreshToken),
-  });
+  const now = new Date();
+  const tokenHash = hashToken(refreshToken);
+  const existingToken = await RefreshToken.findOneAndUpdate(
+    {
+      tokenHash,
+      revokedAt: null,
+      familyRevokedAt: null,
+      expiresAt: { $gt: now },
+    },
+    {
+      $set: {
+        revokedAt: now,
+        revokedByIp: req.ip,
+      },
+    },
+    { new: true },
+  );
 
   if (!existingToken) {
+    const rejectedToken = await RefreshToken.findOne({ tokenHash });
+
+    if (!rejectedToken) {
+      throw new ApiError(401, "Invalid refresh token");
+    }
+
+    if (rejectedToken.revokedAt) {
+      await revokeRefreshTokenFamily({
+        refreshTokenDoc: rejectedToken,
+        req,
+        reason: "revoked token reuse detected",
+      });
+      throw new ApiError(401, "Refresh token reuse detected");
+    }
+
+    if (rejectedToken.expiresAt <= now) {
+      throw new ApiError(401, "Refresh token has expired");
+    }
+
     throw new ApiError(401, "Invalid refresh token");
-  }
-
-  if (existingToken.revokedAt) {
-    throw new ApiError(401, "Refresh token has been revoked");
-  }
-
-  if (existingToken.expiresAt <= new Date()) {
-    throw new ApiError(401, "Refresh token has expired");
   }
 
   const [user, membership] = await Promise.all([
@@ -543,12 +567,52 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     throw new ApiError(401, "Refresh token session is no longer active");
   }
 
-  const tokenPair = await issueTokenPair({ user, membership, req });
+  let tokenPair;
 
-  existingToken.revokedAt = new Date();
-  existingToken.revokedByIp = req.ip;
-  existingToken.replacedByTokenId = tokenPair.refreshTokenId;
-  await existingToken.save();
+  try {
+    tokenPair = await issueTokenPair({
+      user,
+      membership,
+      req,
+      tokenFamilyId: existingToken.tokenFamilyId || existingToken._id,
+    });
+  } catch (error) {
+    await RefreshToken.updateOne(
+      {
+        _id: existingToken._id,
+        replacedByTokenId: null,
+      },
+      {
+        $set: {
+          revokedAt: null,
+          revokedByIp: null,
+        },
+      },
+    );
+    throw error;
+  }
+
+  await RefreshToken.updateOne(
+    { _id: existingToken._id },
+    {
+      $set: {
+        replacedByTokenId: tokenPair.refreshTokenId,
+      },
+    },
+  );
+
+  const familyRoot = await RefreshToken.findById(
+    existingToken.tokenFamilyId || existingToken._id,
+  ).select("familyRevokedAt");
+
+  if (familyRoot?.familyRevokedAt) {
+    await revokeRefreshTokenFamily({
+      refreshTokenDoc: existingToken,
+      req,
+      reason: "reuse detected during token rotation",
+    });
+    throw new ApiError(401, "Refresh token reuse detected");
+  }
 
   logger.info(`Refresh token rotated for user ${user._id}`);
 
@@ -646,6 +710,7 @@ module.exports = {
   getOrganization,
   getOrganizationMembers,
   updateOrganizationMemberRole,
+  updatePassword,
   login,
   refreshAccessToken,
   revokeRefreshToken,

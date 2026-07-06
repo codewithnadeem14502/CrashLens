@@ -39,6 +39,16 @@ const refreshTokenSchema = new mongoose.Schema(
       ref: "RefreshToken",
       default: null,
     },
+    tokenFamilyId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "RefreshToken",
+      default: null,
+      index: true,
+    },
+    familyRevokedAt: {
+      type: Date,
+      default: null,
+    },
     createdByIp: {
       type: String,
       default: null,
