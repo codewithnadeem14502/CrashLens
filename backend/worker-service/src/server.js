@@ -8,6 +8,7 @@ const errorHandler = require("./middleware/errorHandler");
 const workerRoutes = require("./routes/worker-route");
 const { redactSensitiveFields } = require("./utils/constants");
 const logger = require("./utils/logger");
+const { buildCorsOptions } = require("./utils/cors");
 const { closeRabbitMQ, connectToRabbitMQ } = require("./utils/rabbitmq");
 
 const app = express();
@@ -16,7 +17,7 @@ const PORT = process.env.PORT || 3004;
 app.set("trust proxy", 1);
 
 app.use(helmet());
-app.use(cors());
+app.use(cors(buildCorsOptions()));
 app.use(express.json({ limit: "256kb" }));
 
 app.use((req, res, next) => {

@@ -6,6 +6,7 @@ const helmet = require("helmet");
 const { rateLimit } = require("express-rate-limit");
 const { RedisStore } = require("rate-limit-redis");
 const logger = require("./utils/logger");
+const { buildCorsOptions } = require("./utils/cors");
 const redisClient = new redis(process.env.REDIS_URL);
 const proxy = require("express-http-proxy");
 
@@ -13,7 +14,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Middleware
-app.use(cors());
+app.use(cors(buildCorsOptions()));
 app.use(helmet());
 app.use(express.json());
 

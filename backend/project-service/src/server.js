@@ -5,6 +5,7 @@ const cors = require("cors");
 const helmet = require("helmet");
 const errorHandler = require("./middleware/errorHandler");
 const logger = require("./utils/logger");
+const { buildCorsOptions } = require("./utils/cors");
 const projectRoutes = require("./routes/project-route");
 const connectDatabase = require("./config/database");
 const { redactSensitiveFields } = require("./utils/constants");
@@ -28,7 +29,7 @@ redisClient.on("error", (error) => {
 
 //middleware
 app.use(helmet());
-app.use(cors());
+app.use(cors(buildCorsOptions()));
 app.use(express.json());
 
 app.use((req, res, next) => {

@@ -1,9 +1,18 @@
 const winston = require("winston");
 const { Level, NodeEnv } = require("./constants");
 
+const getLogLevel = () => {
+  if (process.env.LOG_LEVEL) {
+    return process.env.LOG_LEVEL;
+  }
+
+  return process.env.NODE_ENV === NodeEnv.DEVELOPMENT
+    ? Level.DEBUG
+    : Level.INFO;
+};
+
 const logger = winston.createLogger({
-  level:
-    process.env.NODE_ENV === NodeEnv.PRODUCTION ? Level.INFO : Level.DEBUG,
+  level: getLogLevel(),
   format: winston.format.combine(
     winston.format.timestamp(),
     winston.format.errors({ stack: true }), // stack trace of error
