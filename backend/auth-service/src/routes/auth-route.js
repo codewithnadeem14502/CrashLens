@@ -29,6 +29,13 @@ router.post(
   authController.createOrganizationMember,
 );
 
+router.patch(
+  "/organizations/:organizationId/members/:memberId/role",
+  authenticate,
+  requirePermission(Permissions.MEMBER_ROLE_UPDATE),
+  authController.updateOrganizationMemberRole,
+);
+
 router.delete(
   "/organizations/:organizationId/members/:memberId",
   authenticate,

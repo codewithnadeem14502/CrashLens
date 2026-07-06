@@ -119,6 +119,18 @@ const validateCreateMemberPayload = (payload) => {
   }
 };
 
+const validateUpdateMemberRolePayload = (payload) => {
+  const errors = [];
+
+  if (!AssignableMemberRoles.includes(payload.role)) {
+    errors.push(`role must be one of: ${AssignableMemberRoles.join(", ")}`);
+  }
+
+  if (errors.length) {
+    throw new ApiError(400, "Invalid member role payload", errors);
+  }
+};
+
 const validateOrganizationAdminPayload = (payload) => {
   const errors = [];
   const organizationName = payload.organizationName;
@@ -371,6 +383,83 @@ const createOrganizationMember = asyncHandler(async (req, res) => {
   });
 });
 
+const updateOrganizationMemberRole = asyncHandler(async (req, res) => {
+  validateUpdateMemberRolePayload(req.body);
+
+  if (req.user.organizationId !== req.params.organizationId) {
+    throw new ApiError(403, "Permission denied for this organization");
+  }
+
+  if (req.user.role !== Roles.ADMIN) {
+    throw new ApiError(403, "Only admin members can update roles");
+  }
+
+  if (req.user.membershipId === req.params.memberId) {
+    throw new ApiError(403, "Admin cannot update their own role");
+  }
+
+  const membership = await Membership.findOne({
+    _id: req.params.memberId,
+    organizationId: req.params.organizationId,
+    status: MembershipStatus.ACTIVE,
+  });
+
+  if (!membership) {
+    throw new ApiError(404, "Organization member not found");
+  }
+
+  if (!AssignableMemberRoles.includes(membership.role)) {
+    throw new ApiError(403, "Only developer and viewer roles can be updated");
+  }
+
+  const previousRole = membership.role;
+
+  if (previousRole === req.body.role) {
+    return res.status(200).json({
+      success: true,
+      message: "Organization member role already matches requested role",
+      data: {
+        membership: sanitizeMembership(
+          membership,
+          RolePermissions[membership.role] || [],
+        ),
+      },
+    });
+  }
+
+  membership.role = req.body.role;
+  await membership.save();
+
+  await RefreshToken.updateMany(
+    {
+      membershipId: membership._id,
+      organizationId: membership.organizationId,
+      revokedAt: null,
+    },
+    {
+      $set: {
+        revokedAt: new Date(),
+        revokedByIp: req.ip,
+      },
+    },
+  );
+
+  logger.info(
+    `Admin ${req.user.sub} updated member ${membership.userId} role from ${previousRole} to ${membership.role} in organization ${membership.organizationId}`,
+  );
+
+  return res.status(200).json({
+    success: true,
+    message: "Organization member role updated successfully",
+    data: {
+      membership: sanitizeMembership(
+        membership,
+        RolePermissions[membership.role] || [],
+      ),
+    },
+  });
+});
+
 const deleteOrganizationMember = asyncHandler(async (req, res) => {
   if (req.user.organizationId !== req.params.organizationId) {
     throw new ApiError(403, "Permission denied for this organization");
@@ -556,6 +645,7 @@ module.exports = {
   deleteOrganizationMember,
   getOrganization,
   getOrganizationMembers,
+  updateOrganizationMemberRole,
   login,
   refreshAccessToken,
   revokeRefreshToken,
