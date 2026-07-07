@@ -10,7 +10,7 @@ const {
 const logger = require("../utils/logger");
 
 const MAX_LIMIT = 100;
-const DEFAULT_LIMIT = 25;
+const DEFAULT_LIMIT = 5;
 
 const ensureObjectId = (value, fieldName) => {
   if (!mongoose.Types.ObjectId.isValid(value)) {
@@ -88,7 +88,9 @@ const getSortPipeline = (sortBy = "lastSeen", order = "desc") => {
 };
 
 const buildIssueFilter = ({ query, organizationId }) => {
-  const filter = { organizationId: new mongoose.Types.ObjectId(organizationId) };
+  const filter = {
+    organizationId: new mongoose.Types.ObjectId(organizationId),
+  };
 
   if (query.projectId) {
     ensureObjectId(query.projectId, "projectId");

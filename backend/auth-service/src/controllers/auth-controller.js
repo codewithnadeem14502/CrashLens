@@ -250,7 +250,9 @@ const login = asyncHandler(async (req, res) => {
   const membership = memberships[0];
   const tokenPair = await issueTokenPair({ user, membership, req });
 
-  logger.info(`User ${user._id} logged in for organization ${membership.organizationId}`);
+  logger.info(
+    `User ${user._id} logged in for organization ${membership.organizationId}`,
+  );
 
   return res.status(200).json({
     success: true,
@@ -297,7 +299,10 @@ const createOrganizationMember = asyncHandler(async (req, res) => {
     userId: user._id,
   });
 
-  if (existingMembership && existingMembership.status === MembershipStatus.ACTIVE) {
+  if (
+    existingMembership &&
+    existingMembership.status === MembershipStatus.ACTIVE
+  ) {
     throw new ApiError(409, "User is already an active organization member");
   }
 
@@ -333,31 +338,10 @@ const createOrganizationMember = asyncHandler(async (req, res) => {
 });
 
 const updatePassword = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.user.sub).select("+passwordHash");
+  const user = await User.findById(req.user.sub);
 
   if (!user || user.status !== AccountStatus.ACTIVE) {
     throw new ApiError(401, "Authentication session is no longer active");
-  }
-
-  const passwordMatches = await verifyPassword(
-    req.body.currentPassword,
-    user.passwordHash,
-  );
-
-  if (!passwordMatches) {
-    throw new ApiError(401, "Current password is incorrect");
-  }
-
-  const passwordReused = await verifyPassword(
-    req.body.newPassword,
-    user.passwordHash,
-  );
-
-  if (passwordReused) {
-    throw new ApiError(
-      400,
-      "New password must be different from current password",
-    );
   }
 
   user.passwordHash = await hashPassword(req.body.newPassword);

@@ -58,13 +58,10 @@ const login = {
 
 const updatePassword = {
   body: Joi.object({
-    currentPassword: Joi.string().min(1).max(128).required(),
-    newPassword: password
-      .required()
-      .disallow(Joi.ref("currentPassword"))
-      .messages({
-        "any.invalid": "newPassword must be different from currentPassword",
-      }),
+    newPassword: password.required().messages({
+      "any.required": "newPassword is required",
+      "string.empty": "newPassword is required",
+    }),
   })
     .required()
     .unknown(false),
