@@ -10,7 +10,14 @@ const password = Joi.string()
   .max(128)
   .pattern(/[a-z]/, "lowercase letter")
   .pattern(/[A-Z]/, "uppercase letter")
-  .pattern(/[0-9]/, "number");
+  .pattern(/[0-9]/, "number")
+  .messages({
+    "any.required": "Password is required",
+    "string.empty": "Password is required",
+    "string.min": "Password must be at least 8 characters long",
+    "string.max": "Password must be at most 128 characters long",
+    "string.pattern.name": "Password must include at least one {#name}",
+  });
 const organizationName = Joi.string().trim().min(2).max(120);
 const organizationSlug = Joi.string().trim().min(2).max(120);
 const refreshToken = Joi.string().hex().length(128);

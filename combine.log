@@ -1,0 +1,2 @@
+{"level":"warn","message":"400 Invalid request body: password failed","service":"auth-service","timestamp":"2026-07-07T10:16:19.853Z"}
+{"level":"warn","message":"400 Invalid request body: Password must include at least one lowercase letter; Password must include at least one uppercase letter","service":"auth-service","timestamp":"2026-07-07T10:18:21.871Z"}

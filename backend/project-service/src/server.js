@@ -1,6 +1,5 @@
 require("dotenv").config();
 const express = require("express");
-const Redis = require("ioredis");
 const cors = require("cors");
 const helmet = require("helmet");
 const errorHandler = require("./middleware/errorHandler");
@@ -13,6 +12,7 @@ const { RateLimiterRedis } = require("rate-limiter-flexible");
 const { rateLimit } = require("express-rate-limit");
 const { RedisStore } = require("rate-limit-redis");
 const { closeRabbitMQ, connectToRabbitMQ } = require("./utils/rabbitmq");
+const { closeRedis, redisClient } = require("./utils/redis");
 
 const app = express();
 const PORT = process.env.PORT || 3002;
@@ -20,12 +20,6 @@ const PORT = process.env.PORT || 3002;
 app.set("trust proxy", 1);
 
 connectDatabase().catch((e) => logger.error("Mongo connection error", e));
-
-const redisClient = new Redis(process.env.REDIS_URL);
-
-redisClient.on("error", (error) => {
-  logger.error(`Redis connection error: ${error.message}`);
-});
 
 //middleware
 app.use(helmet());
@@ -124,10 +118,12 @@ process.on("unhandledRejection", (reason, promise) => {
 
 process.on("SIGTERM", async () => {
   await closeRabbitMQ();
+  await closeRedis();
   process.exit(0);
 });
 
 process.on("SIGINT", async () => {
   await closeRabbitMQ();
+  await closeRedis();
   process.exit(0);
 });

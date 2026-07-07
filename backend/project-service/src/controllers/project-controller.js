@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const Project = require("../models/project-model");
 const logger = require("../utils/logger");
 const { buildDsn, generateDsnPublicKey } = require("../utils/dsn");
+const { redisClient } = require("../utils/redis");
 const {
   publishProjectArchived,
   publishProjectCreated,
@@ -16,8 +17,28 @@ const {
   asyncHandler,
   slugify,
 } = require("../utils/constants");
+const {
+  validateCreateProjectPayload,
+  validateSettings,
+  validateUpdateProjectPayload,
+} = require("../validators/project-validator");
 
-const MAX_SETTINGS_KEYS = 50;
+const parsePositiveInteger = (value, fallback) => {
+  const parsedValue = Number.parseInt(value, 10);
+
+  return Number.isInteger(parsedValue) && parsedValue > 0
+    ? parsedValue
+    : fallback;
+};
+
+const PROJECT_DSN_CACHE_TTL_SECONDS = parsePositiveInteger(
+  process.env.PROJECT_DSN_CACHE_TTL_SECONDS,
+  300,
+);
+const PROJECT_CACHE_TTL_SECONDS = parsePositiveInteger(
+  process.env.PROJECT_CACHE_TTL_SECONDS,
+  120,
+);
 
 const serializeSettings = (settings) => {
   if (!settings) {
@@ -45,23 +66,6 @@ const sanitizeProject = (project) => ({
   archivedAt: project.archivedAt,
 });
 
-const isObject = (value) =>
-  value && typeof value === "object" && !Array.isArray(value);
-
-const validateSettings = (settings) => {
-  if (settings === undefined) {
-    return;
-  }
-
-  if (!isObject(settings)) {
-    throw new ApiError(400, "settings must be an object");
-  }
-
-  if (Object.keys(settings).length > MAX_SETTINGS_KEYS) {
-    throw new ApiError(400, `settings cannot exceed ${MAX_SETTINGS_KEYS} keys`);
-  }
-};
-
 const normalizeEnvironment = (environment) => {
   if (environment === undefined || environment === null || environment === "") {
     return DefaultEnvironment;
@@ -81,68 +85,6 @@ const normalizeEnvironment = (environment) => {
   }
 
   return normalized;
-};
-
-const validateCreateProjectPayload = (payload) => {
-  const errors = [];
-
-  if (!payload.name || payload.name.trim().length < 2) {
-    errors.push("name must be at least 2 characters");
-  }
-
-  if (payload.name && payload.name.trim().length > 120) {
-    errors.push("name cannot exceed 120 characters");
-  }
-
-  if (payload.settings !== undefined && !isObject(payload.settings)) {
-    errors.push("settings must be an object");
-  }
-
-  if (payload.settings && Object.keys(payload.settings).length > MAX_SETTINGS_KEYS) {
-    errors.push(`settings cannot exceed ${MAX_SETTINGS_KEYS} keys`);
-  }
-
-  if (errors.length) {
-    throw new ApiError(400, "Invalid project payload", errors);
-  }
-};
-
-const validateUpdateProjectPayload = (payload) => {
-  const allowedFields = new Set(["name", "environment", "settings"]);
-  const suppliedFields = Object.keys(payload || {});
-  const errors = [];
-
-  if (!suppliedFields.length) {
-    errors.push("at least one supported field is required");
-  }
-
-  suppliedFields.forEach((field) => {
-    if (!allowedFields.has(field)) {
-      errors.push(`${field} cannot be updated`);
-    }
-  });
-
-  if (payload.name !== undefined) {
-    if (typeof payload.name !== "string" || payload.name.trim().length < 2) {
-      errors.push("name must be at least 2 characters");
-    }
-
-    if (typeof payload.name === "string" && payload.name.trim().length > 120) {
-      errors.push("name cannot exceed 120 characters");
-    }
-  }
-
-  if (payload.settings !== undefined && !isObject(payload.settings)) {
-    errors.push("settings must be an object");
-  }
-
-  if (payload.settings && Object.keys(payload.settings).length > MAX_SETTINGS_KEYS) {
-    errors.push(`settings cannot exceed ${MAX_SETTINGS_KEYS} keys`);
-  }
-
-  if (errors.length) {
-    throw new ApiError(400, "Invalid project update payload", errors);
-  }
 };
 
 const ensureObjectId = (value, fieldName) => {
@@ -188,6 +130,103 @@ const createUniqueProjectDsn = async (projectId) => {
   throw new ApiError(500, "Unable to generate project DSN");
 };
 
+const getProjectDsnCacheKey = ({ organizationId, projectId }) =>
+  `project-service:project-dsn:${organizationId}:${projectId}`;
+
+const getProjectCacheKey = ({ organizationId, projectId }) =>
+  `project-service:project:${organizationId}:${projectId}`;
+
+const getProjectListCacheKey = ({ organizationId, includeArchived }) =>
+  `project-service:project-list:${organizationId}:includeArchived=${includeArchived}`;
+
+const buildProjectDsnPayload = (project) => ({
+  projectId: project._id.toString(),
+  dsn: project.dsn,
+});
+
+const canUseRedis = () => redisClient.status === "ready";
+
+const readJsonCache = async ({ cacheKey, validator }) => {
+  if (!canUseRedis()) {
+    logger.debug(`Skipping cache read because Redis is ${redisClient.status}`);
+    return null;
+  }
+
+  try {
+    const cachedValue = await redisClient.get(cacheKey);
+
+    if (!cachedValue) {
+      return null;
+    }
+
+    const cachedPayload = JSON.parse(cachedValue);
+
+    if (validator && !validator(cachedPayload)) {
+      logger.warn(`Invalid cache payload found for key ${cacheKey}`);
+      await redisClient.del(cacheKey);
+      return null;
+    }
+
+    return cachedPayload;
+  } catch (error) {
+    logger.warn(`Failed to read cache key ${cacheKey}: ${error.message}`);
+    return null;
+  }
+};
+
+const writeJsonCache = async ({ cacheKey, payload, ttlSeconds }) => {
+  if (!canUseRedis()) {
+    logger.debug(`Skipping cache write because Redis is ${redisClient.status}`);
+    return;
+  }
+
+  try {
+    await redisClient.set(
+      cacheKey,
+      JSON.stringify(payload),
+      "EX",
+      ttlSeconds,
+    );
+  } catch (error) {
+    logger.warn(`Failed to write cache key ${cacheKey}: ${error.message}`);
+  }
+};
+
+const deleteCacheKeys = async (cacheKeys) => {
+  if (!canUseRedis()) {
+    logger.debug(`Skipping cache invalidation because Redis is ${redisClient.status}`);
+    return;
+  }
+
+  try {
+    await redisClient.del(...cacheKeys);
+  } catch (error) {
+    logger.warn(`Failed to invalidate cache keys: ${error.message}`);
+  }
+};
+
+const isProjectDsnPayload = (payload) => payload.projectId && payload.dsn;
+
+const isProjectPayload = (payload) => payload.project && payload.project.id;
+
+const isProjectListPayload = (payload) => Array.isArray(payload.projects);
+
+const writeProjectDsnCache = async ({ cacheKey, payload }) =>
+  writeJsonCache({
+    cacheKey,
+    payload,
+    ttlSeconds: PROJECT_DSN_CACHE_TTL_SECONDS,
+  });
+
+const invalidateProjectReadCaches = async ({ organizationId, projectId }) => {
+  await deleteCacheKeys([
+    getProjectDsnCacheKey({ organizationId, projectId }),
+    getProjectCacheKey({ organizationId, projectId }),
+    getProjectListCacheKey({ organizationId, includeArchived: true }),
+    getProjectListCacheKey({ organizationId, includeArchived: false }),
+  ]);
+};
+
 const createProject = asyncHandler(async (req, res) => {
   validateCreateProjectPayload(req.body);
 
@@ -226,6 +265,11 @@ const createProject = asyncHandler(async (req, res) => {
     `Created project ${project._id} for organization ${organizationId} by user ${createdBy}`,
   );
 
+  await invalidateProjectReadCaches({
+    organizationId,
+    projectId: project._id,
+  });
+
   await publishProjectCreated(project);
 
   return res.status(201).json({
@@ -239,36 +283,89 @@ const createProject = asyncHandler(async (req, res) => {
 });
 
 const listProjects = asyncHandler(async (req, res) => {
+  const includeArchived = req.query.includeArchived === "true";
+  const cacheKey = getProjectListCacheKey({
+    organizationId: req.user.organizationId,
+    includeArchived,
+  });
+  const cachedProjectList = await readJsonCache({
+    cacheKey,
+    validator: isProjectListPayload,
+  });
+
+  if (cachedProjectList) {
+    logger.info(`Returned cached project list for organization ${req.user.organizationId}`);
+
+    return res.status(200).json({
+      success: true,
+      data: cachedProjectList,
+    });
+  }
+
   const filter = {
     organizationId: req.user.organizationId,
   };
 
-  if (req.query.includeArchived !== "true") {
+  if (!includeArchived) {
     filter.status = ProjectStatus.ACTIVE;
   }
 
   const projects = await Project.find(filter).sort({ createdAt: -1 }).lean();
+  const responsePayload = {
+    projects: projects.map(sanitizeProject),
+  };
+
+  await writeJsonCache({
+    cacheKey,
+    payload: responsePayload,
+    ttlSeconds: PROJECT_CACHE_TTL_SECONDS,
+  });
 
   return res.status(200).json({
     success: true,
-    data: {
-      projects: projects.map(sanitizeProject),
-    },
+    data: responsePayload,
   });
 });
 
 const getProject = asyncHandler(async (req, res) => {
+  ensureObjectId(req.params.projectId, "projectId");
+
+  const cacheKey = getProjectCacheKey({
+    organizationId: req.user.organizationId,
+    projectId: req.params.projectId,
+  });
+  const cachedProject = await readJsonCache({
+    cacheKey,
+    validator: isProjectPayload,
+  });
+
+  if (cachedProject) {
+    logger.info(`Returned cached project ${req.params.projectId}`);
+
+    return res.status(200).json({
+      success: true,
+      data: cachedProject,
+    });
+  }
+
   const project = await findProjectForRequest({
     projectId: req.params.projectId,
     organizationId: req.user.organizationId,
     includeDsn: true,
   });
+  const responsePayload = {
+    project: sanitizeProject(project),
+  };
+
+  await writeJsonCache({
+    cacheKey,
+    payload: responsePayload,
+    ttlSeconds: PROJECT_CACHE_TTL_SECONDS,
+  });
 
   return res.status(200).json({
     success: true,
-    data: {
-      project: sanitizeProject(project),
-    },
+    data: responsePayload,
   });
 });
 
@@ -312,6 +409,10 @@ const updateProject = asyncHandler(async (req, res) => {
   }
 
   await project.save();
+  await invalidateProjectReadCaches({
+    organizationId: req.user.organizationId,
+    projectId: project._id,
+  });
 
   logger.info(`Updated project ${project._id} by user ${req.user.sub}`);
 
@@ -347,6 +448,10 @@ const archiveProject = asyncHandler(async (req, res) => {
   project.archivedBy = req.user.sub;
 
   await project.save();
+  await invalidateProjectReadCaches({
+    organizationId: req.user.organizationId,
+    projectId: project._id,
+  });
 
   logger.info(`Archived project ${project._id} by user ${req.user.sub}`);
 
@@ -362,18 +467,41 @@ const archiveProject = asyncHandler(async (req, res) => {
 });
 
 const getProjectDsn = asyncHandler(async (req, res) => {
+  ensureObjectId(req.params.projectId, "projectId");
+
+  const cacheKey = getProjectDsnCacheKey({
+    organizationId: req.user.organizationId,
+    projectId: req.params.projectId,
+  });
+  const cachedProjectDsn = await readJsonCache({
+    cacheKey,
+    validator: isProjectDsnPayload,
+  });
+
+  if (cachedProjectDsn) {
+    logger.info(`Returned cached DSN for project ${req.params.projectId}`);
+
+    return res.status(200).json({
+      success: true,
+      data: cachedProjectDsn,
+    });
+  }
+
   const project = await findProjectForRequest({
     projectId: req.params.projectId,
     organizationId: req.user.organizationId,
     includeDsn: true,
   });
+  const responsePayload = buildProjectDsnPayload(project);
+
+  await writeProjectDsnCache({
+    cacheKey,
+    payload: responsePayload,
+  });
 
   return res.status(200).json({
     success: true,
-    data: {
-      projectId: project._id,
-      dsn: project.dsn,
-    },
+    data: responsePayload,
   });
 });
 
@@ -395,6 +523,17 @@ const regenerateProjectDsn = asyncHandler(async (req, res) => {
   project.dsnPublicKey = dsn.dsnPublicKey;
 
   await project.save();
+  await invalidateProjectReadCaches({
+    organizationId: req.user.organizationId,
+    projectId: project._id,
+  });
+  await writeProjectDsnCache({
+    cacheKey: getProjectDsnCacheKey({
+      organizationId: req.user.organizationId,
+      projectId: project._id,
+    }),
+    payload: buildProjectDsnPayload(project),
+  });
 
   logger.warn(`Regenerated DSN for project ${project._id} by user ${req.user.sub}`);
 

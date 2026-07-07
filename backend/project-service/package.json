@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
-    "check": "node --check src/server.js && node --check src/controllers/project-controller.js && node --check src/models/project-model.js && node --check src/routes/project-route.js && node --check src/events/project-events.js && node --check src/utils/rabbitmq.js"
+    "check": "node --check src/server.js && node --check src/controllers/project-controller.js && node --check src/validators/project-validator.js && node --check src/models/project-model.js && node --check src/routes/project-route.js && node --check src/events/project-events.js && node --check src/utils/rabbitmq.js && node --check src/utils/redis.js"
   },
   "keywords": [],
   "author": "",
