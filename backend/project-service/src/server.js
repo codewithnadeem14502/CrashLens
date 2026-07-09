@@ -8,11 +8,8 @@ const { buildCorsOptions } = require("./utils/cors");
 const projectRoutes = require("./routes/project-route");
 const connectDatabase = require("./config/database");
 const { redactSensitiveFields } = require("./utils/constants");
-const { RateLimiterRedis } = require("rate-limiter-flexible");
-const { rateLimit } = require("express-rate-limit");
-const { RedisStore } = require("rate-limit-redis");
 const { closeRabbitMQ, connectToRabbitMQ } = require("./utils/rabbitmq");
-const { closeRedis, redisClient } = require("./utils/redis");
+const { closeRedis } = require("./utils/redis");
 
 const app = express();
 const PORT = process.env.PORT || 3002;
@@ -33,57 +30,6 @@ app.use((req, res, next) => {
   );
   next();
 });
-
-// Basic IP-based burst protection. This is not a full DDoS solution, but it
-// protects the service from accidental or low-effort request floods.
-const burstLimiter = new RateLimiterRedis({
-  storeClient: redisClient,
-  keyPrefix: "project-service:burst",
-  points: 10,
-  duration: 1,
-});
-
-app.use((req, res, next) => {
-  burstLimiter
-    .consume(req.ip)
-    .then(() => next())
-    .catch((rateLimiterError) => {
-      if (!rateLimiterError || !rateLimiterError.msBeforeNext) {
-        logger.error(`Burst limiter store error: ${rateLimiterError.message}`);
-        return next();
-      }
-
-      logger.warn(`Rate limit exceed for this IP: ${req.ip}`);
-      return res.status(429).json({
-        success: false,
-        message: "Too many requests",
-      });
-    });
-});
-
-// Rate limiter for sensitive endpoints
-const sensitiveEndpointsLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15Mins
-  max: 50, // many no of request
-  standardHeaders: true,
-  legacyHeaders: false,
-  handler: (req, res) => {
-    logger.warn(`Sensitive endpoint rate limit exceed for this IP: ${req.ip}`);
-    res.status(429).json({
-      success: false,
-      message: "Too many requests",
-    });
-  },
-  passOnStoreError: true,
-  store: new RedisStore({
-    prefix: "project-service:sensitive:",
-    sendCommand: (...args) => redisClient.call(args[0], ...args.slice(1)),
-  }),
-});
-app.post("/api/projects", sensitiveEndpointsLimiter);
-app.patch("/api/projects/:projectId", sensitiveEndpointsLimiter);
-app.delete("/api/projects/:projectId", sensitiveEndpointsLimiter);
-app.post("/api/projects/:projectId/regenerate-dsn", sensitiveEndpointsLimiter);
 
 app.get("/health", (req, res) => {
   res.status(200).json({

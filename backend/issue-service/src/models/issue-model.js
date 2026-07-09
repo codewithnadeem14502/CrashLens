@@ -247,8 +247,135 @@ const processedOccurrenceSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
+const transactionSpanSchema = new mongoose.Schema(
+  {
+    spanId: { type: String, trim: true },
+    parentSpanId: { type: String, trim: true },
+    op: { type: String, trim: true, maxlength: 200 },
+    description: { type: String, trim: true, maxlength: 1000 },
+    startTimestamp: Date,
+    endTimestamp: Date,
+    durationMs: { type: Number, min: 0 },
+    status: { type: String, trim: true, maxlength: 100 },
+    data: mixedContextSchema,
+  },
+  { _id: false },
+);
+
+const performanceTransactionSchema = new mongoose.Schema(
+  {
+    transactionId: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
+    },
+    ingestionId: {
+      type: String,
+      trim: true,
+    },
+    projectId: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: true,
+      index: true,
+    },
+    organizationId: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: true,
+      index: true,
+    },
+    name: {
+      type: String,
+      trim: true,
+      maxlength: 500,
+    },
+    method: {
+      type: String,
+      required: true,
+      uppercase: true,
+      trim: true,
+      maxlength: 20,
+    },
+    route: {
+      type: String,
+      required: true,
+      trim: true,
+      maxlength: 2048,
+    },
+    url: {
+      type: String,
+      trim: true,
+      maxlength: 2048,
+    },
+    durationMs: {
+      type: Number,
+      required: true,
+      min: 0,
+      index: true,
+    },
+    statusCode: {
+      type: Number,
+      required: true,
+      min: 100,
+      max: 599,
+      index: true,
+    },
+    traceId: {
+      type: String,
+      trim: true,
+      maxlength: 200,
+      index: true,
+    },
+    spanId: {
+      type: String,
+      trim: true,
+      maxlength: 200,
+    },
+    spans: [transactionSpanSchema],
+    tags: mixedContextSchema,
+    release: {
+      type: String,
+      trim: true,
+      maxlength: 200,
+      index: true,
+    },
+    environment: {
+      type: String,
+      enum: Object.values(Environments),
+      default: Environments.PRODUCTION,
+      index: true,
+    },
+    occurredAt: {
+      type: Date,
+      required: true,
+      index: true,
+    },
+    receivedAt: Date,
+    processedAt: Date,
+  },
+  { timestamps: true },
+);
+
+performanceTransactionSchema.index({
+  organizationId: 1,
+  projectId: 1,
+  method: 1,
+  route: 1,
+  occurredAt: -1,
+});
+performanceTransactionSchema.index({
+  organizationId: 1,
+  projectId: 1,
+  environment: 1,
+  occurredAt: -1,
+});
+
 const Issue = mongoose.model("Issue", issueSchema);
 const IssueEvent = mongoose.model("IssueEvent", issueEventSchema);
+const PerformanceTransaction = mongoose.model(
+  "PerformanceTransaction",
+  performanceTransactionSchema,
+);
 const ProcessedOccurrence = mongoose.model(
   "ProcessedOccurrence",
   processedOccurrenceSchema,
@@ -257,5 +384,6 @@ const ProcessedOccurrence = mongoose.model(
 module.exports = {
   Issue,
   IssueEvent,
+  PerformanceTransaction,
   ProcessedOccurrence,
 };

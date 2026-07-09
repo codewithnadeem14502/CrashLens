@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
-    "check": "node --check src/server.js && node --check src/controllers/issue-controller.js && node --check src/events/issue-events.js && node --check src/models/issue-model.js && node --check src/routes/issue-route.js && node --check src/utils/rabbitmq.js"
+    "check": "node --check src/server.js && node --check src/controllers/issue-controller.js && node --check src/events/issue-events.js && node --check src/events/performance-events.js && node --check src/models/issue-model.js && node --check src/routes/issue-route.js && node --check src/utils/rabbitmq.js"
   },
   "keywords": [],
   "author": "",

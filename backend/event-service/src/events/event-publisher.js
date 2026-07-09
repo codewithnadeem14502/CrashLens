@@ -1,10 +1,7 @@
 const crypto = require("crypto");
 const { publishEvent } = require("../utils/rabbitmq");
+const { EventTypes } = require("../utils/constants");
 const logger = require("../utils/logger");
-
-const EventTypes = Object.freeze({
-  EVENT_INGESTED: "event.ingested",
-});
 
 const publishEventIngested = async ({ eventId, dsnCache, parsedDsn, event }) => {
   const envelope = {
@@ -32,7 +29,40 @@ const publishEventIngested = async ({ eventId, dsnCache, parsedDsn, event }) => 
   return envelope;
 };
 
+const publishTransactionIngested = async ({
+  transactionId,
+  dsnCache,
+  parsedDsn,
+  transaction,
+}) => {
+  const envelope = {
+    eventId: transactionId,
+    eventType: EventTypes.TRANSACTION_INGESTED,
+    schemaVersion: 1,
+    producer: "event-service",
+    occurredAt: new Date().toISOString(),
+    data: {
+      transactionId,
+      ingestionId: crypto.randomUUID(),
+      projectId: dsnCache.projectId.toString(),
+      organizationId: dsnCache.organizationId.toString(),
+      dsnPublicKey: parsedDsn.dsnPublicKey,
+      environment: transaction.environment || dsnCache.environment,
+      receivedAt: new Date().toISOString(),
+      transaction,
+    },
+  };
+
+  await publishEvent(EventTypes.TRANSACTION_INGESTED, envelope);
+  logger.info(
+    `Published ${EventTypes.TRANSACTION_INGESTED} ${transactionId} for project ${envelope.data.projectId}`,
+  );
+
+  return envelope;
+};
+
 module.exports = {
   EventTypes,
   publishEventIngested,
+  publishTransactionIngested,
 };

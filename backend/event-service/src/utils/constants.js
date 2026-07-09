@@ -34,6 +34,11 @@ const ProjectEnvironments = Object.freeze({
 
 const DefaultEnvironment = ProjectEnvironments.PRODUCTION;
 
+const EventTypes = Object.freeze({
+  EVENT_INGESTED: "event.ingested",
+  TRANSACTION_INGESTED: "transaction.ingested",
+});
+
 const SENSITIVE_KEYS = new Set([
   "password",
   "passwordHash",
@@ -88,6 +93,7 @@ module.exports = {
   ProjectStatus,
   ProjectEnvironments,
   DefaultEnvironment,
+  EventTypes,
   ApiError,
   asyncHandler,
   slugify,

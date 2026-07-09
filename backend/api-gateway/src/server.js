@@ -1,13 +1,9 @@
 require("dotenv").config();
 const express = require("express");
-const redis = require("ioredis");
 const cors = require("cors");
 const helmet = require("helmet");
-const { rateLimit } = require("express-rate-limit");
-const { RedisStore } = require("rate-limit-redis");
 const logger = require("./utils/logger");
 const { buildCorsOptions } = require("./utils/cors");
-const redisClient = new redis(process.env.REDIS_URL);
 const proxy = require("express-http-proxy");
 
 const app = express();
@@ -18,26 +14,6 @@ app.use(cors(buildCorsOptions()));
 app.use(helmet());
 app.use(express.json());
 
-// rate limit
-const ratelimitOptions = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15Mins
-  max: 100, // many no of request
-  standardHeaders: true,
-  legacyHeaders: false,
-  handler: (req, res) => {
-    logger.warn(`Sensitive endpoint rate limit exceed for this IP: ${req.ip}`);
-    res.status(429).json({
-      success: false,
-      message: "To many requests",
-    });
-  },
-  store: new RedisStore({
-    // new way
-    sendCommand: (...args) => redisClient.call(args[0], ...args.slice(1)),
-  }),
-});
-
-app.use(ratelimitOptions);
 app.use((req, res, next) => {
   logger.info(`Received ${req.method} request to ${req.url}`);
   logger.info(`Request body: ${JSON.stringify(req.body)}`);
@@ -154,6 +130,4 @@ app.listen(PORT, () => {
   logger.info(
     `Issue service is running on port ${process.env.ISSUE_SERVICE_URL}`,
   );
-
-  logger.info(`Redis Url ${process.env.REDIS_URL}`);
 });

@@ -47,6 +47,7 @@ const ProcessingStatus = Object.freeze({
 
 const EventTypes = Object.freeze({
   ISSUE_OCCURRENCE_DETECTED: "issue.occurrence.detected",
+  TRANSACTION_INGESTED: "transaction.ingested",
 });
 
 const QueueConfig = Object.freeze({
@@ -61,6 +62,15 @@ const QueueConfig = Object.freeze({
   DLQ:
     process.env.ISSUE_OCCURRENCE_DLQ ||
     "issue-service.occurrence-processing.dlq",
+  TRANSACTION_QUEUE:
+    process.env.ISSUE_TRANSACTION_QUEUE ||
+    "issue-service.transaction-processing",
+  TRANSACTION_RETRY_QUEUE:
+    process.env.ISSUE_TRANSACTION_RETRY_QUEUE ||
+    "issue-service.transaction-processing.retry",
+  TRANSACTION_DLQ:
+    process.env.ISSUE_TRANSACTION_DLQ ||
+    "issue-service.transaction-processing.dlq",
   PREFETCH: Number.parseInt(process.env.ISSUE_PREFETCH || "10", 10),
   MAX_RETRY_ATTEMPTS: Number.parseInt(
     process.env.MAX_RETRY_ATTEMPTS || "3",

@@ -1,5 +1,9 @@
 const mongoose = require("mongoose");
-const { Issue, IssueEvent } = require("../models/issue-model");
+const {
+  Issue,
+  IssueEvent,
+  PerformanceTransaction,
+} = require("../models/issue-model");
 const {
   ApiError,
   Environments,
@@ -11,6 +15,8 @@ const logger = require("../utils/logger");
 
 const MAX_LIMIT = 100;
 const DEFAULT_LIMIT = 5;
+const DEFAULT_PERFORMANCE_DAYS = 14;
+const MAX_PERFORMANCE_ROWS = 5000;
 
 const ensureObjectId = (value, fieldName) => {
   if (!mongoose.Types.ObjectId.isValid(value)) {
@@ -49,6 +55,111 @@ const parseDate = (value, fieldName) => {
   }
 
   return parsed;
+};
+
+const subtractDays = (days) => {
+  const date = new Date();
+  date.setUTCDate(date.getUTCDate() - days);
+  return date;
+};
+
+const percentile = (values, target) => {
+  if (!values.length) {
+    return 0;
+  }
+
+  const sorted = [...values].sort((a, b) => a - b);
+  const index = Math.ceil((target / 100) * sorted.length) - 1;
+  return sorted[Math.max(0, Math.min(index, sorted.length - 1))];
+};
+
+const roundMetric = (value) => Math.round((value || 0) * 100) / 100;
+
+const getEndpointKey = ({ method, route }) =>
+  Buffer.from(`${method} ${route}`, "utf8").toString("base64url");
+
+const parseEndpointKey = (endpointId) => {
+  let decoded;
+
+  try {
+    decoded = Buffer.from(endpointId, "base64url").toString("utf8");
+  } catch (error) {
+    throw new ApiError(400, "endpointId is invalid");
+  }
+
+  const separatorIndex = decoded.indexOf(" ");
+
+  if (separatorIndex < 1) {
+    throw new ApiError(400, "endpointId is invalid");
+  }
+
+  return {
+    method: decoded.slice(0, separatorIndex),
+    route: decoded.slice(separatorIndex + 1),
+  };
+};
+
+const buildPerformanceFilter = ({ query, organizationId }) => {
+  const filter = {
+    organizationId: new mongoose.Types.ObjectId(organizationId),
+  };
+
+  if (query.projectId) {
+    ensureObjectId(query.projectId, "projectId");
+    filter.projectId = new mongoose.Types.ObjectId(query.projectId);
+  }
+
+  if (query.environment) {
+    if (!Object.values(Environments).includes(query.environment)) {
+      throw new ApiError(
+        400,
+        `environment must be one of: ${Object.values(Environments).join(", ")}`,
+      );
+    }
+
+    filter.environment = query.environment;
+  }
+
+  if (query.release) {
+    filter.release = query.release;
+  }
+
+  const dateFrom =
+    parseDate(query.dateFrom, "dateFrom") ||
+    subtractDays(DEFAULT_PERFORMANCE_DAYS);
+  const dateTo = parseDate(query.dateTo, "dateTo");
+
+  filter.occurredAt = { $gte: dateFrom };
+
+  if (dateTo) {
+    filter.occurredAt.$lte = dateTo;
+  }
+
+  return filter;
+};
+
+const summarizeTransactions = (transactions) => {
+  const durations = transactions.map((transaction) => transaction.durationMs);
+  const requestCount = transactions.length;
+  const errorCount = transactions.filter(
+    (transaction) => transaction.statusCode >= 500,
+  ).length;
+  const totalDuration = durations.reduce((sum, duration) => sum + duration, 0);
+
+  return {
+    requestCount,
+    errorCount,
+    errorRate: requestCount ? roundMetric((errorCount / requestCount) * 100) : 0,
+    averageDurationMs: requestCount
+      ? roundMetric(totalDuration / requestCount)
+      : 0,
+    p50DurationMs: roundMetric(percentile(durations, 50)),
+    p75DurationMs: roundMetric(percentile(durations, 75)),
+    p95DurationMs: roundMetric(percentile(durations, 95)),
+    p99DurationMs: roundMetric(percentile(durations, 99)),
+    minDurationMs: requestCount ? Math.min(...durations) : 0,
+    maxDurationMs: requestCount ? Math.max(...durations) : 0,
+  };
 };
 
 const getSortPipeline = (sortBy = "lastSeen", order = "desc") => {
@@ -210,6 +321,29 @@ const serializeIssueEvent = (event) => ({
   receivedAt: event.receivedAt,
   processedAt: event.processedAt,
   createdAt: event.createdAt,
+});
+
+const serializeTransaction = (transaction) => ({
+  id: transaction._id,
+  transactionId: transaction.transactionId,
+  projectId: transaction.projectId,
+  organizationId: transaction.organizationId,
+  name: transaction.name,
+  method: transaction.method,
+  route: transaction.route,
+  url: transaction.url,
+  durationMs: transaction.durationMs,
+  statusCode: transaction.statusCode,
+  traceId: transaction.traceId,
+  spanId: transaction.spanId,
+  spans: transaction.spans,
+  tags: transaction.tags,
+  release: transaction.release,
+  environment: transaction.environment,
+  occurredAt: transaction.occurredAt,
+  receivedAt: transaction.receivedAt,
+  processedAt: transaction.processedAt,
+  createdAt: transaction.createdAt,
 });
 
 const findIssueForRequest = async ({ issueId, organizationId }) => {
@@ -382,9 +516,189 @@ const updateIssueStatus = asyncHandler(async (req, res) => {
   });
 });
 
+const listPerformanceEndpoints = asyncHandler(async (req, res) => {
+  const filter = buildPerformanceFilter({
+    query: req.query,
+    organizationId: req.user.organizationId,
+  });
+  const slowThresholdMs = Number.parseFloat(req.query.slowThresholdMs || "1000");
+
+  const transactions = await PerformanceTransaction.find(filter)
+    .sort({ occurredAt: -1 })
+    .limit(MAX_PERFORMANCE_ROWS)
+    .lean();
+
+  const grouped = transactions.reduce((result, transaction) => {
+    const key = `${transaction.method} ${transaction.route}`;
+
+    if (!result.has(key)) {
+      result.set(key, []);
+    }
+
+    result.get(key).push(transaction);
+    return result;
+  }, new Map());
+
+  const endpoints = [...grouped.values()]
+    .map((items) => {
+      const latest = items[0];
+      const summary = summarizeTransactions(items);
+
+      return {
+        endpointId: getEndpointKey(latest),
+        method: latest.method,
+        route: latest.route,
+        environment: latest.environment,
+        latestSeen: latest.occurredAt,
+        slowRequestCount: items.filter(
+          (transaction) => transaction.durationMs >= slowThresholdMs,
+        ).length,
+        ...summary,
+      };
+    })
+    .sort((left, right) => right.p95DurationMs - left.p95DurationMs);
+
+  return res.status(200).json({
+    success: true,
+    data: {
+      endpoints,
+      sampledTransactions: transactions.length,
+      defaultWindowDays: DEFAULT_PERFORMANCE_DAYS,
+    },
+  });
+});
+
+const getEndpointPerformance = asyncHandler(async (req, res) => {
+  const endpoint = parseEndpointKey(req.params.endpointId);
+  const filter = {
+    ...buildPerformanceFilter({
+      query: req.query,
+      organizationId: req.user.organizationId,
+    }),
+    method: endpoint.method,
+    route: endpoint.route,
+  };
+
+  const transactions = await PerformanceTransaction.find(filter)
+    .sort({ occurredAt: -1 })
+    .limit(MAX_PERFORMANCE_ROWS)
+    .lean();
+
+  const slowest = [...transactions]
+    .sort((left, right) => right.durationMs - left.durationMs)
+    .slice(0, 10)
+    .map(serializeTransaction);
+
+  return res.status(200).json({
+    success: true,
+    data: {
+      endpoint: {
+        endpointId: req.params.endpointId,
+        method: endpoint.method,
+        route: endpoint.route,
+      },
+      summary: summarizeTransactions(transactions),
+      slowestTransactions: slowest,
+      recentTransactions: transactions.slice(0, 20).map(serializeTransaction),
+    },
+  });
+});
+
+const getEndpointTrends = asyncHandler(async (req, res) => {
+  const endpoint = parseEndpointKey(req.params.endpointId);
+  const filter = {
+    ...buildPerformanceFilter({
+      query: req.query,
+      organizationId: req.user.organizationId,
+    }),
+    method: endpoint.method,
+    route: endpoint.route,
+  };
+
+  const transactions = await PerformanceTransaction.find(filter)
+    .sort({ occurredAt: 1 })
+    .limit(MAX_PERFORMANCE_ROWS)
+    .lean();
+
+  const buckets = transactions.reduce((result, transaction) => {
+    const bucket = transaction.occurredAt.toISOString().slice(0, 10);
+
+    if (!result.has(bucket)) {
+      result.set(bucket, []);
+    }
+
+    result.get(bucket).push(transaction);
+    return result;
+  }, new Map());
+
+  const trend = [...buckets.entries()].map(([bucket, items]) => ({
+    bucket,
+    ...summarizeTransactions(items),
+  }));
+
+  const previous = trend.at(-2);
+  const current = trend.at(-1);
+  const averageDeltaMs =
+    previous && current
+      ? roundMetric(current.averageDurationMs - previous.averageDurationMs)
+      : 0;
+  const averageDeltaPercent =
+    previous && current && previous.averageDurationMs
+      ? roundMetric((averageDeltaMs / previous.averageDurationMs) * 100)
+      : 0;
+
+  return res.status(200).json({
+    success: true,
+    data: {
+      endpoint: {
+        endpointId: req.params.endpointId,
+        method: endpoint.method,
+        route: endpoint.route,
+      },
+      trend,
+      comparison: {
+        previousBucket: previous?.bucket || null,
+        currentBucket: current?.bucket || null,
+        previousAverageDurationMs: previous?.averageDurationMs || 0,
+        currentAverageDurationMs: current?.averageDurationMs || 0,
+        averageDeltaMs,
+        averageDeltaPercent,
+        regression: averageDeltaPercent > 0,
+      },
+    },
+  });
+});
+
+const getTrace = asyncHandler(async (req, res) => {
+  const filter = {
+    ...buildPerformanceFilter({
+      query: req.query,
+      organizationId: req.user.organizationId,
+    }),
+    traceId: req.params.traceId,
+  };
+
+  const transactions = await PerformanceTransaction.find(filter)
+    .sort({ occurredAt: 1 })
+    .limit(100)
+    .lean();
+
+  return res.status(200).json({
+    success: true,
+    data: {
+      traceId: req.params.traceId,
+      transactions: transactions.map(serializeTransaction),
+    },
+  });
+});
+
 module.exports = {
+  getEndpointPerformance,
+  getEndpointTrends,
   getIssue,
+  getTrace,
   listIssueEvents,
   listIssues,
+  listPerformanceEndpoints,
   updateIssueStatus,
 };

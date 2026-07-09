@@ -1,19 +1,18 @@
 const crypto = require("crypto");
 const DsnCache = require("../models/dsn-cache-model");
-const { publishEventIngested } = require("../events/event-publisher");
+const {
+  publishEventIngested,
+  publishTransactionIngested,
+} = require("../events/event-publisher");
 const { ApiError, ProjectStatus, asyncHandler } = require("../utils/constants");
 const { parseDsn } = require("../utils/dsn");
 const logger = require("../utils/logger");
-const { validateEventPayload } = require("../utils/validation");
+const {
+  validateEventPayload,
+  validateTransactionPayload,
+} = require("../utils/validation");
 
-const ingestEvent = asyncHandler(async (req, res) => {
-  const payload = validateEventPayload(req.body);
-  const parsedDsn = parseDsn(payload.dsn);
-
-  logger.info(
-    `Received ${payload.event.type} event for project ${parsedDsn.projectId}`,
-  );
-
+const getActiveDsnCache = async (parsedDsn) => {
   const dsnCache = await DsnCache.findOne({
     projectId: parsedDsn.projectId,
     dsnPublicKey: parsedDsn.dsnPublicKey,
@@ -26,11 +25,23 @@ const ingestEvent = asyncHandler(async (req, res) => {
 
   if (dsnCache.status !== ProjectStatus.ACTIVE) {
     logger.warn(
-      `Rejected event for project ${parsedDsn.projectId}: project status is ${dsnCache.status}`,
+      `Rejected ingest for project ${parsedDsn.projectId}: project status is ${dsnCache.status}`,
     );
     throw new ApiError(403, "Project is not active");
   }
 
+  return dsnCache;
+};
+
+const ingestEvent = asyncHandler(async (req, res) => {
+  const payload = validateEventPayload(req.body);
+  const parsedDsn = parseDsn(payload.dsn);
+
+  logger.info(
+    `Received ${payload.event.type} event for project ${parsedDsn.projectId}`,
+  );
+
+  const dsnCache = await getActiveDsnCache(parsedDsn);
   const eventId = `evt_${crypto.randomUUID()}`;
 
   logger.info(
@@ -53,6 +64,40 @@ const ingestEvent = asyncHandler(async (req, res) => {
   });
 });
 
+const ingestTransaction = asyncHandler(async (req, res) => {
+  const payload = validateTransactionPayload(req.body);
+  const parsedDsn = parseDsn(payload.dsn);
+
+  logger.info(
+    `Received transaction ${payload.transaction.method} ${payload.transaction.route} for project ${parsedDsn.projectId}`,
+  );
+
+  const dsnCache = await getActiveDsnCache(parsedDsn);
+  const transactionId = `txn_${crypto.randomUUID()}`;
+
+  logger.info(
+    `Publishing ingested transaction ${transactionId} for project ${parsedDsn.projectId}`,
+  );
+
+  await publishTransactionIngested({
+    transactionId,
+    dsnCache,
+    parsedDsn,
+    transaction: payload.transaction,
+  });
+
+  logger.info(
+    `Accepted transaction ${transactionId} for project ${parsedDsn.projectId}`,
+  );
+
+  return res.status(202).json({
+    success: true,
+    message: "Transaction accepted",
+    transactionId,
+  });
+});
+
 module.exports = {
   ingestEvent,
+  ingestTransaction,
 };
