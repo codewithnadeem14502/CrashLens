@@ -198,6 +198,15 @@ const getSortPipeline = (sortBy = "lastSeen", order = "desc") => {
   return [{ $sort: { [sortField]: direction } }];
 };
 
+// $text requires a whole-word/stemmed match against the text index, so a
+// partial substring typed into the search box (the expected "search as you
+// type" UX) silently returns nothing even when a matching issue exists.
+// A regex-based partial match is what the UI actually needs; the search
+// term is Joi-validated to a plain string (Joi.string().max(200)) upstream,
+// but is escaped here anyway so it's matched literally rather than
+// interpreted as a regex pattern.
+const escapeRegExp = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
 const buildIssueFilter = ({ query, organizationId }) => {
   const filter = {
     organizationId: new mongoose.Types.ObjectId(organizationId),
@@ -265,7 +274,13 @@ const buildIssueFilter = ({ query, organizationId }) => {
   }
 
   if (query.search) {
-    filter.$text = { $search: query.search };
+    const pattern = new RegExp(escapeRegExp(query.search), "i");
+    filter.$or = [
+      { title: pattern },
+      { message: pattern },
+      { errorName: pattern },
+      { culprit: pattern },
+    ];
   }
 
   return filter;

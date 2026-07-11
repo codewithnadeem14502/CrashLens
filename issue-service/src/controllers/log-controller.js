@@ -44,6 +44,14 @@ const parseDate = (value, fieldName) => {
   return parsed;
 };
 
+// See issue-controller.js's identical comment: $text only matches whole/
+// stemmed words against the text index, so a partial substring typed into
+// the search box returns nothing even when a matching log line exists. A
+// regex-based partial match is what the "search as you type" UX needs;
+// `query.search` is Joi-validated to a plain string upstream but is
+// escaped here anyway so it's matched literally, not as a regex pattern.
+const escapeRegExp = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
 const buildLogFilter = ({ query, organizationId }) => {
   const filter = {
     organizationId: new mongoose.Types.ObjectId(organizationId),
@@ -89,7 +97,7 @@ const buildLogFilter = ({ query, organizationId }) => {
   }
 
   if (query.search) {
-    filter.$text = { $search: query.search };
+    filter.message = new RegExp(escapeRegExp(query.search), "i");
   }
 
   return filter;

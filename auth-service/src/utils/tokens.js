@@ -13,7 +13,7 @@ const hashToken = (token) =>
 const generateRefreshToken = () => crypto.randomBytes(64).toString("hex");
 
 const getRefreshTokenExpiryDate = () => {
-  const days = Number(process.env.REFRESH_TOKEN_EXPIRES_IN_DAYS || 7);
+  const days = Number(process.env.REFRESH_TOKEN_EXPIRES_IN_DAYS || 15);
   const expiresAt = new Date();
 
   expiresAt.setDate(expiresAt.getDate() + days);
@@ -32,7 +32,7 @@ const signAccessToken = ({ user, membership, permissions }) =>
     },
     getJwtSecret(),
     {
-      expiresIn: process.env.JWT_EXPIRES_IN || "1h",
+      expiresIn: process.env.JWT_EXPIRES_IN || "2m",
       issuer: "crash-lens-auth-service",
     },
   );
