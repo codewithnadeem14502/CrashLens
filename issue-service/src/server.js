@@ -1,55 +1,26 @@
 require("dotenv").config();
-const express = require("express");
-const cors = require("cors");
-const helmet = require("helmet");
-const errorHandler = require("./middleware/errorHandler");
+const logger = require("./utils/logger");
+const { assertJwtSecret } = require("./utils/assertJwtSecret");
+const app = require("./app");
 const { startOccurrenceConsumer } = require("./events/issue-events");
 const { startTransactionConsumer } = require("./events/performance-events");
-const logger = require("./utils/logger");
-const { buildCorsOptions } = require("./utils/cors");
-const createIssueRouter = require("./routes/issue-route");
+const { startLogsConsumer } = require("./events/log-events");
 const connectDatabase = require("./config/database");
-const { redactSensitiveFields } = require("./utils/constants");
 const { closeRabbitMQ, connectToRabbitMQ } = require("./utils/rabbitmq");
 
-const app = express();
 const PORT = process.env.PORT || 3005;
-
-app.set("trust proxy", 1);
-
-//middleware
-app.use(helmet());
-app.use(cors(buildCorsOptions()));
-app.use(express.json({ limit: "256kb" }));
-
-app.use((req, res, next) => {
-  logger.info(`Received ${req.method} request to ${req.url}`);
-  logger.info(
-    `Request body: ${JSON.stringify(redactSensitiveFields(req.body))}`,
-  );
-  next();
-});
-
-app.get("/health", (req, res) => {
-  res.status(200).json({
-    success: true,
-    service: "issue-service",
-    status: "ok",
-  });
-});
-
-// routes
-app.use("/api/issues", createIssueRouter());
-app.use("/", createIssueRouter());
-
-app.use(errorHandler);
 
 async function startServer() {
   try {
+    // Fail closed: refuse to boot if JWT_SECRET is missing or the known
+    // default placeholder, before touching Mongo/RabbitMQ or listening.
+    assertJwtSecret();
+
     await connectDatabase();
     await connectToRabbitMQ();
     await startOccurrenceConsumer();
     await startTransactionConsumer();
+    await startLogsConsumer();
     app.listen(PORT, () => {
       logger.info(`issue-service running on port ${PORT}`);
     });

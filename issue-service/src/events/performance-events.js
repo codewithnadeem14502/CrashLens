@@ -1,5 +1,8 @@
 const mongoose = require("mongoose");
-const { PerformanceTransaction } = require("../models/issue-model");
+const {
+  PerformanceTransaction,
+  MAX_TRANSACTION_SPANS,
+} = require("../models/issue-model");
 const {
   Environments,
   EventTypes,
@@ -97,6 +100,20 @@ const validateTransactionEnvelope = (envelope) => {
     errors.push("transaction.timestamp must be a valid date");
   }
 
+  // Defense in depth: event-service's Joi schema already caps spans at
+  // ingestion time, but this consumer trusts whatever's on the queue -
+  // a message crafted/replayed directly onto RabbitMQ (bypassing
+  // event-service entirely) would otherwise sail through untouched. Fail
+  // fast here (before the DB round-trip) rather than relying solely on the
+  // model-level validator in processTransaction to catch it.
+  if (
+    transaction.spans !== undefined &&
+    (!Array.isArray(transaction.spans) ||
+      transaction.spans.length > MAX_TRANSACTION_SPANS)
+  ) {
+    errors.push(`transaction.spans must be an array of at most ${MAX_TRANSACTION_SPANS} items`);
+  }
+
   if (errors.length) {
     throw new ValidationError("Invalid transaction payload", errors);
   }
@@ -131,7 +148,12 @@ const processTransaction = async (payload) => {
         processedAt: new Date(),
       },
     },
-    { upsert: true },
+    // runValidators: Mongoose does NOT run schema validators on
+    // updateOne/findOneAndUpdate by default, even with upsert:true - without
+    // this, the spans-array-length and per-span data-size validators added
+    // to the model would silently never run for this write path (the only
+    // path transactions are ever persisted through).
+    { upsert: true, runValidators: true, context: "query" },
   );
 };
 
@@ -185,4 +207,6 @@ const startTransactionConsumer = async () => {
 
 module.exports = {
   startTransactionConsumer,
+  validateTransactionEnvelope,
+  processTransaction,
 };

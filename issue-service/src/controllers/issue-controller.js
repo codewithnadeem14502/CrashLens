@@ -323,7 +323,14 @@ const serializeIssueEvent = (event) => ({
   createdAt: event.createdAt,
 });
 
-const serializeTransaction = (transaction) => ({
+// includeSpans defaults to true for getTrace, the one place spans are the
+// actual point of the response. List views (getEndpointPerformance's
+// slowest/recent) pass includeSpans: false - each span can carry an
+// arbitrary-shape data payload (see the P1 fix in issue-model.js), and a
+// list of 10-20 transactions has no business shipping that much nested
+// data over the wire when the caller just wants to scan durations/status
+// codes and click into a specific trace for the full detail.
+const serializeTransaction = (transaction, { includeSpans = true } = {}) => ({
   id: transaction._id,
   transactionId: transaction.transactionId,
   projectId: transaction.projectId,
@@ -336,7 +343,7 @@ const serializeTransaction = (transaction) => ({
   statusCode: transaction.statusCode,
   traceId: transaction.traceId,
   spanId: transaction.spanId,
-  spans: transaction.spans,
+  spans: includeSpans ? transaction.spans : undefined,
   tags: transaction.tags,
   release: transaction.release,
   environment: transaction.environment,
@@ -523,7 +530,13 @@ const listPerformanceEndpoints = asyncHandler(async (req, res) => {
   });
   const slowThresholdMs = Number.parseFloat(req.query.slowThresholdMs || "1000");
 
+  // Pure aggregate endpoint - summarizeTransactions/getEndpointKey only
+  // ever read method/route/environment/occurredAt/durationMs/statusCode,
+  // so spans/tags never needed to leave Mongo for this query in the first
+  // place (see the P1 fix in issue-model.js for why spans in particular
+  // are worth excluding proactively).
   const transactions = await PerformanceTransaction.find(filter)
+    .select("-spans -tags")
     .sort({ occurredAt: -1 })
     .limit(MAX_PERFORMANCE_ROWS)
     .lean();
@@ -579,7 +592,11 @@ const getEndpointPerformance = asyncHandler(async (req, res) => {
     route: endpoint.route,
   };
 
+  // spans excluded here too (summary doesn't read them, and the
+  // slowest/recent lists below serialize with includeSpans: false) - see
+  // the P1 fix note on serializeTransaction.
   const transactions = await PerformanceTransaction.find(filter)
+    .select("-spans")
     .sort({ occurredAt: -1 })
     .limit(MAX_PERFORMANCE_ROWS)
     .lean();
@@ -587,7 +604,7 @@ const getEndpointPerformance = asyncHandler(async (req, res) => {
   const slowest = [...transactions]
     .sort((left, right) => right.durationMs - left.durationMs)
     .slice(0, 10)
-    .map(serializeTransaction);
+    .map((transaction) => serializeTransaction(transaction, { includeSpans: false }));
 
   return res.status(200).json({
     success: true,
@@ -599,7 +616,9 @@ const getEndpointPerformance = asyncHandler(async (req, res) => {
       },
       summary: summarizeTransactions(transactions),
       slowestTransactions: slowest,
-      recentTransactions: transactions.slice(0, 20).map(serializeTransaction),
+      recentTransactions: transactions
+        .slice(0, 20)
+        .map((transaction) => serializeTransaction(transaction, { includeSpans: false })),
     },
   });
 });
@@ -615,7 +634,10 @@ const getEndpointTrends = asyncHandler(async (req, res) => {
     route: endpoint.route,
   };
 
+  // Pure aggregate endpoint (day buckets of summarizeTransactions output) -
+  // spans/tags never read here either.
   const transactions = await PerformanceTransaction.find(filter)
+    .select("-spans -tags")
     .sort({ occurredAt: 1 })
     .limit(MAX_PERFORMANCE_ROWS)
     .lean();

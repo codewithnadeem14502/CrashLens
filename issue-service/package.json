@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
-    "check": "node --check src/server.js && node --check src/controllers/issue-controller.js && node --check src/events/issue-events.js && node --check src/events/performance-events.js && node --check src/models/issue-model.js && node --check src/routes/issue-route.js && node --check src/utils/rabbitmq.js"
+    "check": "node --check src/server.js && node --check src/controllers/issue-controller.js && node --check src/controllers/log-controller.js && node --check src/events/issue-events.js && node --check src/events/performance-events.js && node --check src/events/log-events.js && node --check src/models/issue-model.js && node --check src/routes/issue-route.js && node --check src/routes/log-route.js && node --check src/validators/log-validator.js && node --check src/utils/rabbitmq.js",
+    "test": "node --test --test-concurrency=1"
   },
   "keywords": [],
   "author": "",
@@ -19,6 +20,7 @@
     "express-rate-limit": "^8.5.2",
     "helmet": "^8.2.0",
     "ioredis": "^5.11.1",
+    "joi": "^18.2.3",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.7.3",
     "rate-limit-redis": "^5.0.0",
@@ -26,6 +28,7 @@
     "winston": "^3.19.0"
   },
   "devDependencies": {
-    "nodemon": "^3.1.14"
+    "nodemon": "^3.1.14",
+    "supertest": "^7.1.4"
   }
 }

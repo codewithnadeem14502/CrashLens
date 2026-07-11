@@ -1,0 +1,319 @@
+{"level":"info","message":"Connected to RabbitMQ exchange crashlens.events","service":"monitor-service","timestamp":"2026-07-10T18:31:26.190Z"}
+{"level":"info","message":"Published event with routing key: issue.occurrence.detected","service":"monitor-service","timestamp":"2026-07-10T18:31:26.280Z"}
+{"level":"warn","message":"Monitor 6a513a7ecdb355c60f8db7d9 (Nightly backup) missed its check-in","service":"monitor-service","timestamp":"2026-07-10T18:31:26.281Z"}
+{"level":"info","message":"Published event with routing key: issue.occurrence.detected","service":"monitor-service","timestamp":"2026-07-10T18:31:26.295Z"}
+{"level":"warn","message":"Monitor 6a513a7ecdb355c60f8db7db (Nightly backup) missed its check-in","service":"monitor-service","timestamp":"2026-07-10T18:31:26.295Z"}
+{"level":"info","message":"Published event with routing key: issue.occurrence.detected","service":"monitor-service","timestamp":"2026-07-10T18:31:26.315Z"}
+{"level":"warn","message":"Check-in 6a513a7ecdb355c60f8db7e0 for monitor 6a513a7ecdb355c60f8db7df timed out","service":"monitor-service","timestamp":"2026-07-10T18:31:26.315Z"}
+{"level":"warn","message":"Timed-out check-in 6a513a7ecdb355c60f8db7e2 has no parent monitor (deleted?)","service":"monitor-service","timestamp":"2026-07-10T18:31:26.322Z"}
+{"level":"warn","message":"RabbitMQ connection closed","service":"monitor-service","timestamp":"2026-07-10T18:31:26.338Z"}
+{"level":"info","message":"Received POST request to /api/monitors/6a513a7e643a41ff72239237/checkins","service":"monitor-service","timestamp":"2026-07-10T18:31:26.906Z"}
+{"level":"info","message":"Request body: {\"status\":\"ok\"}","service":"monitor-service","timestamp":"2026-07-10T18:31:26.909Z"}
+{"level":"warn","message":"400 Invalid request body","service":"monitor-service","timestamp":"2026-07-10T18:31:26.913Z"}
+{"level":"info","message":"Received POST request to /api/monitors/6a513a7e643a41ff72239237/checkins","service":"monitor-service","timestamp":"2026-07-10T18:31:26.923Z"}
+{"level":"info","message":"Request body: {\"token\":\"[REDACTED]\",\"status\":\"ok\"}","service":"monitor-service","timestamp":"2026-07-10T18:31:26.923Z"}
+{"level":"warn","message":"401 Invalid monitor or check token","service":"monitor-service","timestamp":"2026-07-10T18:31:26.931Z"}
+{"level":"info","message":"Received POST request to /api/monitors/6a513a7e643a41ff72239238/checkins","service":"monitor-service","timestamp":"2026-07-10T18:31:26.934Z"}
+{"level":"info","message":"Request body: {\"token\":\"[REDACTED]\",\"status\":\"ok\"}","service":"monitor-service","timestamp":"2026-07-10T18:31:26.934Z"}
+{"level":"warn","message":"401 Invalid monitor or check token","service":"monitor-service","timestamp":"2026-07-10T18:31:26.936Z"}
+{"level":"info","message":"Received POST request to /api/monitors/6a513a7e643a41ff72239237/checkins","service":"monitor-service","timestamp":"2026-07-10T18:31:26.938Z"}
+{"level":"info","message":"Request body: {\"token\":\"[REDACTED]\",\"status\":\"ok\"}","service":"monitor-service","timestamp":"2026-07-10T18:31:26.939Z"}
+{"level":"info","message":"Received POST request to /api/monitors/6a513a7e643a41ff72239237/checkins","service":"monitor-service","timestamp":"2026-07-10T18:31:26.977Z"}
+{"level":"info","message":"Request body: {\"token\":\"[REDACTED]\"}","service":"monitor-service","timestamp":"2026-07-10T18:31:26.978Z"}
+{"level":"info","message":"Received PATCH request to /api/monitors/6a513a7e643a41ff72239237/checkins/6a513a7e643a41ff7223923a","service":"monitor-service","timestamp":"2026-07-10T18:31:26.986Z"}
+{"level":"info","message":"Request body: {\"token\":\"[REDACTED]\",\"status\":\"ok\"}","service":"monitor-service","timestamp":"2026-07-10T18:31:26.987Z"}
+{"level":"info","message":"Received POST request to /api/monitors/6a513a7e643a41ff72239237/checkins","service":"monitor-service","timestamp":"2026-07-10T18:31:27.086Z"}
+{"level":"info","message":"Request body: {\"token\":\"[REDACTED]\"}","service":"monitor-service","timestamp":"2026-07-10T18:31:27.086Z"}
+{"level":"info","message":"Received PATCH request to /api/monitors/6a513a7e643a41ff72239237/checkins/6a513a7f643a41ff7223923b","service":"monitor-service","timestamp":"2026-07-10T18:31:27.105Z"}
+{"level":"info","message":"Request body: {\"token\":\"[REDACTED]\",\"status\":\"ok\"}","service":"monitor-service","timestamp":"2026-07-10T18:31:27.106Z"}
+{"level":"info","message":"Received PATCH request to /api/monitors/6a513a7e643a41ff72239237/checkins/6a513a7f643a41ff7223923b","service":"monitor-service","timestamp":"2026-07-10T18:31:27.154Z"}
+{"level":"info","message":"Request body: {\"token\":\"[REDACTED]\",\"status\":\"error\"}","service":"monitor-service","timestamp":"2026-07-10T18:31:27.154Z"}
+{"level":"warn","message":"404 In-progress check-in not found","service":"monitor-service","timestamp":"2026-07-10T18:31:27.158Z"}
+{"level":"info","message":"Received GET request to /api/monitors/6a513a7e643a41ff72239237/checkins","service":"monitor-service","timestamp":"2026-07-10T18:31:27.163Z"}
+{"level":"info","message":"Request body: undefined","service":"monitor-service","timestamp":"2026-07-10T18:31:27.163Z"}
+{"level":"warn","message":"401 Authentication token is required","service":"monitor-service","timestamp":"2026-07-10T18:31:27.163Z"}
+{"level":"info","message":"Received GET request to /api/monitors/6a513a7e643a41ff72239237/checkins","service":"monitor-service","timestamp":"2026-07-10T18:31:27.169Z"}
+{"level":"info","message":"Request body: undefined","service":"monitor-service","timestamp":"2026-07-10T18:31:27.169Z"}
+{"level":"info","message":"Received GET request to /api/monitors?status[$ne]=active","service":"monitor-service","timestamp":"2026-07-10T18:31:27.224Z"}
+{"level":"info","message":"Request body: undefined","service":"monitor-service","timestamp":"2026-07-10T18:31:27.225Z"}
+{"level":"warn","message":"400 Invalid request query","service":"monitor-service","timestamp":"2026-07-10T18:31:27.226Z"}
+{"level":"info","message":"Received GET request to /api/monitors","service":"monitor-service","timestamp":"2026-07-10T18:31:27.231Z"}
+{"level":"info","message":"Request body: undefined","service":"monitor-service","timestamp":"2026-07-10T18:31:27.231Z"}
+{"level":"info","message":"Received GET request to /health","service":"monitor-service","timestamp":"2026-07-10T18:31:27.242Z"}
+{"level":"info","message":"Request body: undefined","service":"monitor-service","timestamp":"2026-07-10T18:31:27.242Z"}
+{"level":"info","message":"Connected to RabbitMQ exchange crashlens.events","service":"monitor-service","timestamp":"2026-07-10T18:31:28.606Z"}
+{"level":"info","message":"Published event with routing key: issue.occurrence.detected","service":"monitor-service","timestamp":"2026-07-10T18:31:29.726Z"}
+{"level":"warn","message":"Uptime monitor 6a513a818c2cfe3806b879fe (Local probe target) opened an incident after 2 consecutive failures","service":"monitor-service","timestamp":"2026-07-10T18:31:29.727Z"}
+{"level":"info","message":"Published event with routing key: issue.occurrence.detected","service":"monitor-service","timestamp":"2026-07-10T18:31:30.054Z"}
+{"level":"warn","message":"Uptime monitor 6a513a828c2cfe3806b87a02 (Local probe target) opened an incident after 1 consecutive failures","service":"monitor-service","timestamp":"2026-07-10T18:31:30.055Z"}
+{"level":"info","message":"Published event with routing key: issue.occurrence.detected","service":"monitor-service","timestamp":"2026-07-10T18:31:30.068Z"}
+{"level":"warn","message":"Uptime monitor 6a513a828c2cfe3806b87a02 (Local probe target) opened an incident after 1 consecutive failures","service":"monitor-service","timestamp":"2026-07-10T18:31:30.069Z"}
+{"level":"warn","message":"RabbitMQ connection closed","service":"monitor-service","timestamp":"2026-07-10T18:31:30.089Z"}
+{"level":"info","message":"Connected to RabbitMQ exchange crashlens.events","service":"monitor-service","timestamp":"2026-07-10T18:33:28.724Z"}
+{"level":"info","message":"Published event with routing key: issue.occurrence.detected","service":"monitor-service","timestamp":"2026-07-10T18:33:28.966Z"}
+{"level":"warn","message":"Monitor 6a513af8738b661e54ab07cf (Nightly backup) missed its check-in","service":"monitor-service","timestamp":"2026-07-10T18:33:28.968Z"}
+{"level":"info","message":"Published event with routing key: issue.occurrence.detected","service":"monitor-service","timestamp":"2026-07-10T18:33:29.026Z"}
+{"level":"warn","message":"Monitor 6a513af9738b661e54ab07d1 (Nightly backup) missed its check-in","service":"monitor-service","timestamp":"2026-07-10T18:33:29.026Z"}
+{"level":"info","message":"Published event with routing key: issue.occurrence.detected","service":"monitor-service","timestamp":"2026-07-10T18:33:29.045Z"}
+{"level":"warn","message":"Check-in 6a513af9738b661e54ab07d6 for monitor 6a513af9738b661e54ab07d5 timed out","service":"monitor-service","timestamp":"2026-07-10T18:33:29.045Z"}
+{"level":"warn","message":"Timed-out check-in 6a513af9738b661e54ab07d8 has no parent monitor (deleted?)","service":"monitor-service","timestamp":"2026-07-10T18:33:29.050Z"}
+{"level":"warn","message":"RabbitMQ connection closed","service":"monitor-service","timestamp":"2026-07-10T18:33:29.097Z"}
+{"level":"info","message":"Received POST request to /api/monitors/6a513af965871ea37f427f55/checkins","service":"monitor-service","timestamp":"2026-07-10T18:33:29.683Z"}
+{"level":"info","message":"Request body: {\"status\":\"ok\"}","service":"monitor-service","timestamp":"2026-07-10T18:33:29.686Z"}
+{"level":"warn","message":"400 Invalid request body","service":"monitor-service","timestamp":"2026-07-10T18:33:29.689Z"}
+{"level":"info","message":"Received POST request to /api/monitors/6a513af965871ea37f427f55/checkins","service":"monitor-service","timestamp":"2026-07-10T18:33:29.698Z"}
+{"level":"info","message":"Request body: {\"token\":\"[REDACTED]\",\"status\":\"ok\"}","service":"monitor-service","timestamp":"2026-07-10T18:33:29.699Z"}
+{"level":"warn","message":"401 Invalid monitor or check token","service":"monitor-service","timestamp":"2026-07-10T18:33:29.709Z"}
+{"level":"info","message":"Received POST request to /api/monitors/6a513af965871ea37f427f56/checkins","service":"monitor-service","timestamp":"2026-07-10T18:33:29.711Z"}
+{"level":"info","message":"Request body: {\"token\":\"[REDACTED]\",\"status\":\"ok\"}","service":"monitor-service","timestamp":"2026-07-10T18:33:29.712Z"}
+{"level":"warn","message":"401 Invalid monitor or check token","service":"monitor-service","timestamp":"2026-07-10T18:33:29.714Z"}
+{"level":"info","message":"Received POST request to /api/monitors/6a513af965871ea37f427f55/checkins","service":"monitor-service","timestamp":"2026-07-10T18:33:29.716Z"}
+{"level":"info","message":"Request body: {\"token\":\"[REDACTED]\",\"status\":\"ok\"}","service":"monitor-service","timestamp":"2026-07-10T18:33:29.717Z"}
+{"level":"info","message":"Received POST request to /api/monitors/6a513af965871ea37f427f55/checkins","service":"monitor-service","timestamp":"2026-07-10T18:33:29.750Z"}
+{"level":"info","message":"Request body: {\"token\":\"[REDACTED]\"}","service":"monitor-service","timestamp":"2026-07-10T18:33:29.751Z"}
+{"level":"info","message":"Received PATCH request to /api/monitors/6a513af965871ea37f427f55/checkins/6a513af965871ea37f427f58","service":"monitor-service","timestamp":"2026-07-10T18:33:29.864Z"}
+{"level":"info","message":"Request body: {\"token\":\"[REDACTED]\",\"status\":\"ok\"}","service":"monitor-service","timestamp":"2026-07-10T18:33:29.864Z"}
+{"level":"info","message":"Received POST request to /api/monitors/6a513af965871ea37f427f55/checkins","service":"monitor-service","timestamp":"2026-07-10T18:33:29.875Z"}
+{"level":"info","message":"Request body: {\"token\":\"[REDACTED]\"}","service":"monitor-service","timestamp":"2026-07-10T18:33:29.875Z"}
+{"level":"info","message":"Received PATCH request to /api/monitors/6a513af965871ea37f427f55/checkins/6a513af965871ea37f427f59","service":"monitor-service","timestamp":"2026-07-10T18:33:29.925Z"}
+{"level":"info","message":"Request body: {\"token\":\"[REDACTED]\",\"status\":\"ok\"}","service":"monitor-service","timestamp":"2026-07-10T18:33:29.926Z"}
+{"level":"info","message":"Received PATCH request to /api/monitors/6a513af965871ea37f427f55/checkins/6a513af965871ea37f427f59","service":"monitor-service","timestamp":"2026-07-10T18:33:29.944Z"}
+{"level":"info","message":"Request body: {\"token\":\"[REDACTED]\",\"status\":\"error\"}","service":"monitor-service","timestamp":"2026-07-10T18:33:29.944Z"}
+{"level":"warn","message":"404 In-progress check-in not found","service":"monitor-service","timestamp":"2026-07-10T18:33:29.947Z"}
+{"level":"info","message":"Received GET request to /api/monitors/6a513af965871ea37f427f55/checkins","service":"monitor-service","timestamp":"2026-07-10T18:33:29.953Z"}
+{"level":"info","message":"Request body: undefined","service":"monitor-service","timestamp":"2026-07-10T18:33:29.953Z"}
+{"level":"warn","message":"401 Authentication token is required","service":"monitor-service","timestamp":"2026-07-10T18:33:29.953Z"}
+{"level":"info","message":"Received GET request to /api/monitors/6a513af965871ea37f427f55/checkins","service":"monitor-service","timestamp":"2026-07-10T18:33:29.961Z"}
+{"level":"info","message":"Request body: undefined","service":"monitor-service","timestamp":"2026-07-10T18:33:29.961Z"}
+{"level":"info","message":"Received GET request to /api/monitors?status[$ne]=active","service":"monitor-service","timestamp":"2026-07-10T18:33:30.015Z"}
+{"level":"info","message":"Request body: undefined","service":"monitor-service","timestamp":"2026-07-10T18:33:30.015Z"}
+{"level":"warn","message":"400 Invalid request query","service":"monitor-service","timestamp":"2026-07-10T18:33:30.017Z"}
+{"level":"info","message":"Received GET request to /api/monitors","service":"monitor-service","timestamp":"2026-07-10T18:33:30.020Z"}
+{"level":"info","message":"Request body: undefined","service":"monitor-service","timestamp":"2026-07-10T18:33:30.021Z"}
+{"level":"info","message":"Received GET request to /health","service":"monitor-service","timestamp":"2026-07-10T18:33:30.026Z"}
+{"level":"info","message":"Request body: undefined","service":"monitor-service","timestamp":"2026-07-10T18:33:30.026Z"}
+{"level":"info","message":"Connected to RabbitMQ exchange crashlens.events","service":"monitor-service","timestamp":"2026-07-10T18:33:31.508Z"}
+{"level":"info","message":"Published event with routing key: issue.occurrence.detected","service":"monitor-service","timestamp":"2026-07-10T18:33:32.647Z"}
+{"level":"warn","message":"Uptime monitor 6a513afc932aee638eb66ec6 (Local probe target) opened an incident after 2 consecutive failures","service":"monitor-service","timestamp":"2026-07-10T18:33:32.647Z"}
+{"level":"info","message":"Published event with routing key: issue.occurrence.detected","service":"monitor-service","timestamp":"2026-07-10T18:33:32.973Z"}
+{"level":"warn","message":"Uptime monitor 6a513afc932aee638eb66eca (Local probe target) opened an incident after 1 consecutive failures","service":"monitor-service","timestamp":"2026-07-10T18:33:32.973Z"}
+{"level":"info","message":"Published event with routing key: issue.occurrence.detected","service":"monitor-service","timestamp":"2026-07-10T18:33:32.987Z"}
+{"level":"warn","message":"Uptime monitor 6a513afc932aee638eb66eca (Local probe target) opened an incident after 1 consecutive failures","service":"monitor-service","timestamp":"2026-07-10T18:33:32.987Z"}
+{"level":"warn","message":"RabbitMQ connection closed","service":"monitor-service","timestamp":"2026-07-10T18:33:33.002Z"}
+{"level":"info","message":"Connected to RabbitMQ exchange crashlens.events","service":"monitor-service","timestamp":"2026-07-10T18:37:15.963Z"}
+{"level":"info","message":"Published event with routing key: issue.occurrence.detected","service":"monitor-service","timestamp":"2026-07-10T18:37:16.061Z"}
+{"level":"warn","message":"Monitor 6a513bdcb7a7acf0afb91591 (Nightly backup) missed its check-in","service":"monitor-service","timestamp":"2026-07-10T18:37:16.062Z"}
+{"level":"info","message":"Published event with routing key: issue.occurrence.detected","service":"monitor-service","timestamp":"2026-07-10T18:37:16.074Z"}
+{"level":"warn","message":"Monitor 6a513bdcb7a7acf0afb91593 (Nightly backup) missed its check-in","service":"monitor-service","timestamp":"2026-07-10T18:37:16.075Z"}
+{"level":"info","message":"Published event with routing key: issue.occurrence.detected","service":"monitor-service","timestamp":"2026-07-10T18:37:16.094Z"}
+{"level":"warn","message":"Check-in 6a513bdcb7a7acf0afb91598 for monitor 6a513bdcb7a7acf0afb91597 timed out","service":"monitor-service","timestamp":"2026-07-10T18:37:16.095Z"}
+{"level":"warn","message":"Timed-out check-in 6a513bdcb7a7acf0afb9159a has no parent monitor (deleted?)","service":"monitor-service","timestamp":"2026-07-10T18:37:16.101Z"}
+{"level":"warn","message":"RabbitMQ connection closed","service":"monitor-service","timestamp":"2026-07-10T18:37:16.117Z"}
+{"level":"info","message":"Received POST request to /api/monitors/6a513bdcdd8a90f4ff324386/checkins","service":"monitor-service","timestamp":"2026-07-10T18:37:16.735Z"}
+{"level":"info","message":"Request body: {\"status\":\"ok\"}","service":"monitor-service","timestamp":"2026-07-10T18:37:16.738Z"}
+{"level":"warn","message":"400 Invalid request body","service":"monitor-service","timestamp":"2026-07-10T18:37:16.742Z"}
+{"level":"info","message":"Received POST request to /api/monitors/6a513bdcdd8a90f4ff324386/checkins","service":"monitor-service","timestamp":"2026-07-10T18:37:16.752Z"}
+{"level":"info","message":"Request body: {\"token\":\"[REDACTED]\",\"status\":\"ok\"}","service":"monitor-service","timestamp":"2026-07-10T18:37:16.753Z"}
+{"level":"warn","message":"401 Invalid monitor or check token","service":"monitor-service","timestamp":"2026-07-10T18:37:16.760Z"}
+{"level":"info","message":"Received POST request to /api/monitors/6a513bdcdd8a90f4ff324387/checkins","service":"monitor-service","timestamp":"2026-07-10T18:37:16.763Z"}
+{"level":"info","message":"Request body: {\"token\":\"[REDACTED]\",\"status\":\"ok\"}","service":"monitor-service","timestamp":"2026-07-10T18:37:16.763Z"}
+{"level":"warn","message":"401 Invalid monitor or check token","service":"monitor-service","timestamp":"2026-07-10T18:37:16.765Z"}
+{"level":"info","message":"Received POST request to /api/monitors/6a513bdcdd8a90f4ff324386/checkins","service":"monitor-service","timestamp":"2026-07-10T18:37:16.767Z"}
+{"level":"info","message":"Request body: {\"token\":\"[REDACTED]\",\"status\":\"ok\"}","service":"monitor-service","timestamp":"2026-07-10T18:37:16.767Z"}
+{"level":"info","message":"Received POST request to /api/monitors/6a513bdcdd8a90f4ff324386/checkins","service":"monitor-service","timestamp":"2026-07-10T18:37:16.799Z"}
+{"level":"info","message":"Request body: {\"token\":\"[REDACTED]\"}","service":"monitor-service","timestamp":"2026-07-10T18:37:16.799Z"}
+{"level":"info","message":"Received PATCH request to /api/monitors/6a513bdcdd8a90f4ff324386/checkins/6a513bdcdd8a90f4ff324389","service":"monitor-service","timestamp":"2026-07-10T18:37:16.913Z"}
+{"level":"info","message":"Request body: {\"token\":\"[REDACTED]\",\"status\":\"ok\"}","service":"monitor-service","timestamp":"2026-07-10T18:37:16.913Z"}
+{"level":"info","message":"Received POST request to /api/monitors/6a513bdcdd8a90f4ff324386/checkins","service":"monitor-service","timestamp":"2026-07-10T18:37:16.925Z"}
+{"level":"info","message":"Request body: {\"token\":\"[REDACTED]\"}","service":"monitor-service","timestamp":"2026-07-10T18:37:16.926Z"}
+{"level":"info","message":"Received PATCH request to /api/monitors/6a513bdcdd8a90f4ff324386/checkins/6a513bdcdd8a90f4ff32438a","service":"monitor-service","timestamp":"2026-07-10T18:37:16.934Z"}
+{"level":"info","message":"Request body: {\"token\":\"[REDACTED]\",\"status\":\"ok\"}","service":"monitor-service","timestamp":"2026-07-10T18:37:16.935Z"}
+{"level":"info","message":"Received PATCH request to /api/monitors/6a513bdcdd8a90f4ff324386/checkins/6a513bdcdd8a90f4ff32438a","service":"monitor-service","timestamp":"2026-07-10T18:37:17.003Z"}
+{"level":"info","message":"Request body: {\"token\":\"[REDACTED]\",\"status\":\"error\"}","service":"monitor-service","timestamp":"2026-07-10T18:37:17.003Z"}
+{"level":"warn","message":"404 In-progress check-in not found","service":"monitor-service","timestamp":"2026-07-10T18:37:17.008Z"}
+{"level":"info","message":"Received GET request to /api/monitors/6a513bdcdd8a90f4ff324386/checkins","service":"monitor-service","timestamp":"2026-07-10T18:37:17.014Z"}
+{"level":"info","message":"Request body: undefined","service":"monitor-service","timestamp":"2026-07-10T18:37:17.014Z"}
+{"level":"warn","message":"401 Authentication token is required","service":"monitor-service","timestamp":"2026-07-10T18:37:17.015Z"}
+{"level":"info","message":"Received GET request to /api/monitors/6a513bdcdd8a90f4ff324386/checkins","service":"monitor-service","timestamp":"2026-07-10T18:37:17.022Z"}
+{"level":"info","message":"Request body: undefined","service":"monitor-service","timestamp":"2026-07-10T18:37:17.022Z"}
+{"level":"info","message":"Received GET request to /api/monitors?status[$ne]=active","service":"monitor-service","timestamp":"2026-07-10T18:37:17.094Z"}
+{"level":"info","message":"Request body: undefined","service":"monitor-service","timestamp":"2026-07-10T18:37:17.094Z"}
+{"level":"warn","message":"400 Invalid request query","service":"monitor-service","timestamp":"2026-07-10T18:37:17.096Z"}
+{"level":"info","message":"Received GET request to /api/monitors","service":"monitor-service","timestamp":"2026-07-10T18:37:17.101Z"}
+{"level":"info","message":"Request body: undefined","service":"monitor-service","timestamp":"2026-07-10T18:37:17.101Z"}
+{"level":"info","message":"Received GET request to /health","service":"monitor-service","timestamp":"2026-07-10T18:37:17.109Z"}
+{"level":"info","message":"Request body: undefined","service":"monitor-service","timestamp":"2026-07-10T18:37:17.109Z"}
+{"level":"info","message":"Connected to RabbitMQ exchange crashlens.events","service":"monitor-service","timestamp":"2026-07-10T18:37:18.536Z"}
+{"level":"info","message":"Published event with routing key: issue.occurrence.detected","service":"monitor-service","timestamp":"2026-07-10T18:37:19.648Z"}
+{"level":"warn","message":"Uptime monitor 6a513bdf85dcf918e9943cb3 (Local probe target) opened an incident after 2 consecutive failures","service":"monitor-service","timestamp":"2026-07-10T18:37:19.649Z"}
+{"level":"info","message":"Published event with routing key: issue.occurrence.detected","service":"monitor-service","timestamp":"2026-07-10T18:37:19.978Z"}
+{"level":"warn","message":"Uptime monitor 6a513bdf85dcf918e9943cb7 (Local probe target) opened an incident after 1 consecutive failures","service":"monitor-service","timestamp":"2026-07-10T18:37:19.978Z"}
+{"level":"info","message":"Published event with routing key: issue.occurrence.detected","service":"monitor-service","timestamp":"2026-07-10T18:37:19.992Z"}
+{"level":"warn","message":"Uptime monitor 6a513bdf85dcf918e9943cb7 (Local probe target) opened an incident after 1 consecutive failures","service":"monitor-service","timestamp":"2026-07-10T18:37:19.993Z"}
+{"level":"info","message":"Uptime probe tick: checked 5 monitor(s)","service":"monitor-service","timestamp":"2026-07-10T18:37:20.023Z"}
+{"level":"warn","message":"RabbitMQ connection closed","service":"monitor-service","timestamp":"2026-07-10T18:37:20.043Z"}
+{"level":"info","message":"Connected to RabbitMQ exchange crashlens.events","service":"monitor-service","timestamp":"2026-07-10T18:40:55.538Z"}
+{"level":"info","message":"Published event with routing key: issue.occurrence.detected","service":"monitor-service","timestamp":"2026-07-10T18:40:55.692Z"}
+{"level":"warn","message":"Monitor 6a513cb75ae3eb1070235f5e (Nightly backup) missed its check-in","service":"monitor-service","timestamp":"2026-07-10T18:40:55.694Z"}
+{"level":"info","message":"Published event with routing key: issue.occurrence.detected","service":"monitor-service","timestamp":"2026-07-10T18:40:55.710Z"}
+{"level":"warn","message":"Monitor 6a513cb75ae3eb1070235f60 (Nightly backup) missed its check-in","service":"monitor-service","timestamp":"2026-07-10T18:40:55.710Z"}
+{"level":"info","message":"Published event with routing key: issue.occurrence.detected","service":"monitor-service","timestamp":"2026-07-10T18:40:55.733Z"}
+{"level":"warn","message":"Check-in 6a513cb75ae3eb1070235f65 for monitor 6a513cb75ae3eb1070235f64 timed out","service":"monitor-service","timestamp":"2026-07-10T18:40:55.733Z"}
+{"level":"warn","message":"Timed-out check-in 6a513cb75ae3eb1070235f67 has no parent monitor (deleted?)","service":"monitor-service","timestamp":"2026-07-10T18:40:55.742Z"}
+{"level":"warn","message":"RabbitMQ connection closed","service":"monitor-service","timestamp":"2026-07-10T18:40:55.774Z"}
+{"level":"info","message":"Received POST request to /api/monitors/6a513cb8f50977ce8f178a58/checkins","service":"monitor-service","timestamp":"2026-07-10T18:40:56.408Z"}
+{"level":"info","message":"Request body: {\"status\":\"ok\"}","service":"monitor-service","timestamp":"2026-07-10T18:40:56.411Z"}
+{"level":"warn","message":"400 Invalid request body","service":"monitor-service","timestamp":"2026-07-10T18:40:56.415Z"}
+{"level":"info","message":"Received POST request to /api/monitors/6a513cb8f50977ce8f178a58/checkins","service":"monitor-service","timestamp":"2026-07-10T18:40:56.426Z"}
+{"level":"info","message":"Request body: {\"token\":\"[REDACTED]\",\"status\":\"ok\"}","service":"monitor-service","timestamp":"2026-07-10T18:40:56.426Z"}
+{"level":"warn","message":"401 Invalid monitor or check token","service":"monitor-service","timestamp":"2026-07-10T18:40:56.433Z"}
+{"level":"info","message":"Received POST request to /api/monitors/6a513cb8f50977ce8f178a59/checkins","service":"monitor-service","timestamp":"2026-07-10T18:40:56.436Z"}
+{"level":"info","message":"Request body: {\"token\":\"[REDACTED]\",\"status\":\"ok\"}","service":"monitor-service","timestamp":"2026-07-10T18:40:56.436Z"}
+{"level":"warn","message":"401 Invalid monitor or check token","service":"monitor-service","timestamp":"2026-07-10T18:40:56.438Z"}
+{"level":"info","message":"Received POST request to /api/monitors/6a513cb8f50977ce8f178a58/checkins","service":"monitor-service","timestamp":"2026-07-10T18:40:56.440Z"}
+{"level":"info","message":"Request body: {\"token\":\"[REDACTED]\",\"status\":\"ok\"}","service":"monitor-service","timestamp":"2026-07-10T18:40:56.441Z"}
+{"level":"info","message":"Received POST request to /api/monitors/6a513cb8f50977ce8f178a58/checkins","service":"monitor-service","timestamp":"2026-07-10T18:40:56.478Z"}
+{"level":"info","message":"Request body: {\"token\":\"[REDACTED]\"}","service":"monitor-service","timestamp":"2026-07-10T18:40:56.478Z"}
+{"level":"info","message":"Received PATCH request to /api/monitors/6a513cb8f50977ce8f178a58/checkins/6a513cb8f50977ce8f178a5b","service":"monitor-service","timestamp":"2026-07-10T18:40:56.517Z"}
+{"level":"info","message":"Request body: {\"token\":\"[REDACTED]\",\"status\":\"ok\"}","service":"monitor-service","timestamp":"2026-07-10T18:40:56.518Z"}
+{"level":"info","message":"Received POST request to /api/monitors/6a513cb8f50977ce8f178a58/checkins","service":"monitor-service","timestamp":"2026-07-10T18:40:56.526Z"}
+{"level":"info","message":"Request body: {\"token\":\"[REDACTED]\"}","service":"monitor-service","timestamp":"2026-07-10T18:40:56.526Z"}
+{"level":"info","message":"Received PATCH request to /api/monitors/6a513cb8f50977ce8f178a58/checkins/6a513cb8f50977ce8f178a5c","service":"monitor-service","timestamp":"2026-07-10T18:40:56.585Z"}
+{"level":"info","message":"Request body: {\"token\":\"[REDACTED]\",\"status\":\"ok\"}","service":"monitor-service","timestamp":"2026-07-10T18:40:56.585Z"}
+{"level":"info","message":"Received PATCH request to /api/monitors/6a513cb8f50977ce8f178a58/checkins/6a513cb8f50977ce8f178a5c","service":"monitor-service","timestamp":"2026-07-10T18:40:56.595Z"}
+{"level":"info","message":"Request body: {\"token\":\"[REDACTED]\",\"status\":\"error\"}","service":"monitor-service","timestamp":"2026-07-10T18:40:56.595Z"}
+{"level":"warn","message":"404 In-progress check-in not found","service":"monitor-service","timestamp":"2026-07-10T18:40:56.597Z"}
+{"level":"info","message":"Received GET request to /api/monitors/6a513cb8f50977ce8f178a58/checkins","service":"monitor-service","timestamp":"2026-07-10T18:40:56.601Z"}
+{"level":"info","message":"Request body: undefined","service":"monitor-service","timestamp":"2026-07-10T18:40:56.601Z"}
+{"level":"warn","message":"401 Authentication token is required","service":"monitor-service","timestamp":"2026-07-10T18:40:56.601Z"}
+{"level":"info","message":"Received GET request to /api/monitors/6a513cb8f50977ce8f178a58/checkins","service":"monitor-service","timestamp":"2026-07-10T18:40:56.606Z"}
+{"level":"info","message":"Request body: undefined","service":"monitor-service","timestamp":"2026-07-10T18:40:56.606Z"}
+{"level":"info","message":"Received GET request to /api/monitors?status[$ne]=active","service":"monitor-service","timestamp":"2026-07-10T18:40:56.681Z"}
+{"level":"info","message":"Request body: undefined","service":"monitor-service","timestamp":"2026-07-10T18:40:56.681Z"}
+{"level":"warn","message":"400 Invalid request query","service":"monitor-service","timestamp":"2026-07-10T18:40:56.682Z"}
+{"level":"info","message":"Received GET request to /api/monitors","service":"monitor-service","timestamp":"2026-07-10T18:40:56.685Z"}
+{"level":"info","message":"Request body: undefined","service":"monitor-service","timestamp":"2026-07-10T18:40:56.685Z"}
+{"level":"info","message":"Received GET request to /health","service":"monitor-service","timestamp":"2026-07-10T18:40:56.691Z"}
+{"level":"info","message":"Request body: undefined","service":"monitor-service","timestamp":"2026-07-10T18:40:56.691Z"}
+{"level":"info","message":"Connected to RabbitMQ exchange crashlens.events","service":"monitor-service","timestamp":"2026-07-10T18:40:58.196Z"}
+{"level":"info","message":"Published event with routing key: issue.occurrence.detected","service":"monitor-service","timestamp":"2026-07-10T18:40:59.321Z"}
+{"level":"warn","message":"Uptime monitor 6a513cbbe21e488889c07cd5 (Local probe target) opened an incident after 2 consecutive failures","service":"monitor-service","timestamp":"2026-07-10T18:40:59.322Z"}
+{"level":"info","message":"Published event with routing key: issue.occurrence.detected","service":"monitor-service","timestamp":"2026-07-10T18:40:59.644Z"}
+{"level":"warn","message":"Uptime monitor 6a513cbbe21e488889c07cd9 (Local probe target) opened an incident after 1 consecutive failures","service":"monitor-service","timestamp":"2026-07-10T18:40:59.645Z"}
+{"level":"info","message":"Published event with routing key: issue.occurrence.detected","service":"monitor-service","timestamp":"2026-07-10T18:40:59.658Z"}
+{"level":"warn","message":"Uptime monitor 6a513cbbe21e488889c07cd9 (Local probe target) opened an incident after 1 consecutive failures","service":"monitor-service","timestamp":"2026-07-10T18:40:59.658Z"}
+{"level":"info","message":"Uptime probe tick: checked 5 monitor(s)","service":"monitor-service","timestamp":"2026-07-10T18:40:59.685Z"}
+{"level":"warn","message":"RabbitMQ connection closed","service":"monitor-service","timestamp":"2026-07-10T18:40:59.704Z"}
+{"level":"info","message":"Connected to RabbitMQ exchange crashlens.events","service":"monitor-service","timestamp":"2026-07-10T18:44:30.183Z"}
+{"level":"info","message":"Published event with routing key: issue.occurrence.detected","service":"monitor-service","timestamp":"2026-07-10T18:44:30.323Z"}
+{"level":"warn","message":"Monitor 6a513d8e0abdbe4a57381a2e (Nightly backup) missed its check-in","service":"monitor-service","timestamp":"2026-07-10T18:44:30.324Z"}
+{"level":"info","message":"Published event with routing key: issue.occurrence.detected","service":"monitor-service","timestamp":"2026-07-10T18:44:30.338Z"}
+{"level":"warn","message":"Monitor 6a513d8e0abdbe4a57381a30 (Nightly backup) missed its check-in","service":"monitor-service","timestamp":"2026-07-10T18:44:30.339Z"}
+{"level":"info","message":"Published event with routing key: issue.occurrence.detected","service":"monitor-service","timestamp":"2026-07-10T18:44:30.359Z"}
+{"level":"warn","message":"Check-in 6a513d8e0abdbe4a57381a35 for monitor 6a513d8e0abdbe4a57381a34 timed out","service":"monitor-service","timestamp":"2026-07-10T18:44:30.359Z"}
+{"level":"warn","message":"Timed-out check-in 6a513d8e0abdbe4a57381a37 has no parent monitor (deleted?)","service":"monitor-service","timestamp":"2026-07-10T18:44:30.366Z"}
+{"level":"warn","message":"RabbitMQ connection closed","service":"monitor-service","timestamp":"2026-07-10T18:44:30.386Z"}
+{"level":"info","message":"Received POST request to /api/monitors/6a513d8e9fddaafdd060b2c9/checkins","service":"monitor-service","timestamp":"2026-07-10T18:44:31.056Z"}
+{"level":"info","message":"Request body: {\"status\":\"ok\"}","service":"monitor-service","timestamp":"2026-07-10T18:44:31.059Z"}
+{"level":"warn","message":"400 Invalid request body","service":"monitor-service","timestamp":"2026-07-10T18:44:31.063Z"}
+{"level":"info","message":"Received POST request to /api/monitors/6a513d8e9fddaafdd060b2c9/checkins","service":"monitor-service","timestamp":"2026-07-10T18:44:31.073Z"}
+{"level":"info","message":"Request body: {\"token\":\"[REDACTED]\",\"status\":\"ok\"}","service":"monitor-service","timestamp":"2026-07-10T18:44:31.074Z"}
+{"level":"warn","message":"401 Invalid monitor or check token","service":"monitor-service","timestamp":"2026-07-10T18:44:31.081Z"}
+{"level":"info","message":"Received POST request to /api/monitors/6a513d8f9fddaafdd060b2ca/checkins","service":"monitor-service","timestamp":"2026-07-10T18:44:31.084Z"}
+{"level":"info","message":"Request body: {\"token\":\"[REDACTED]\",\"status\":\"ok\"}","service":"monitor-service","timestamp":"2026-07-10T18:44:31.084Z"}
+{"level":"warn","message":"401 Invalid monitor or check token","service":"monitor-service","timestamp":"2026-07-10T18:44:31.086Z"}
+{"level":"info","message":"Received POST request to /api/monitors/6a513d8e9fddaafdd060b2c9/checkins","service":"monitor-service","timestamp":"2026-07-10T18:44:31.088Z"}
+{"level":"info","message":"Request body: {\"token\":\"[REDACTED]\",\"status\":\"ok\"}","service":"monitor-service","timestamp":"2026-07-10T18:44:31.089Z"}
+{"level":"info","message":"Received POST request to /api/monitors/6a513d8e9fddaafdd060b2c9/checkins","service":"monitor-service","timestamp":"2026-07-10T18:44:31.099Z"}
+{"level":"info","message":"Request body: {\"token\":\"[REDACTED]\"}","service":"monitor-service","timestamp":"2026-07-10T18:44:31.099Z"}
+{"level":"info","message":"Received PATCH request to /api/monitors/6a513d8e9fddaafdd060b2c9/checkins/6a513d8f9fddaafdd060b2cc","service":"monitor-service","timestamp":"2026-07-10T18:44:31.201Z"}
+{"level":"info","message":"Request body: {\"token\":\"[REDACTED]\",\"status\":\"ok\"}","service":"monitor-service","timestamp":"2026-07-10T18:44:31.201Z"}
+{"level":"info","message":"Received POST request to /api/monitors/6a513d8e9fddaafdd060b2c9/checkins","service":"monitor-service","timestamp":"2026-07-10T18:44:31.211Z"}
+{"level":"info","message":"Request body: {\"token\":\"[REDACTED]\"}","service":"monitor-service","timestamp":"2026-07-10T18:44:31.211Z"}
+{"level":"info","message":"Received PATCH request to /api/monitors/6a513d8e9fddaafdd060b2c9/checkins/6a513d8f9fddaafdd060b2cd","service":"monitor-service","timestamp":"2026-07-10T18:44:31.218Z"}
+{"level":"info","message":"Request body: {\"token\":\"[REDACTED]\",\"status\":\"ok\"}","service":"monitor-service","timestamp":"2026-07-10T18:44:31.218Z"}
+{"level":"info","message":"Received PATCH request to /api/monitors/6a513d8e9fddaafdd060b2c9/checkins/6a513d8f9fddaafdd060b2cd","service":"monitor-service","timestamp":"2026-07-10T18:44:31.228Z"}
+{"level":"info","message":"Request body: {\"token\":\"[REDACTED]\",\"status\":\"error\"}","service":"monitor-service","timestamp":"2026-07-10T18:44:31.229Z"}
+{"level":"warn","message":"404 In-progress check-in not found","service":"monitor-service","timestamp":"2026-07-10T18:44:31.231Z"}
+{"level":"info","message":"Received GET request to /api/monitors/6a513d8e9fddaafdd060b2c9/checkins","service":"monitor-service","timestamp":"2026-07-10T18:44:31.235Z"}
+{"level":"info","message":"Request body: undefined","service":"monitor-service","timestamp":"2026-07-10T18:44:31.235Z"}
+{"level":"warn","message":"401 Authentication token is required","service":"monitor-service","timestamp":"2026-07-10T18:44:31.236Z"}
+{"level":"info","message":"Received GET request to /api/monitors/6a513d8e9fddaafdd060b2c9/checkins","service":"monitor-service","timestamp":"2026-07-10T18:44:31.240Z"}
+{"level":"info","message":"Request body: undefined","service":"monitor-service","timestamp":"2026-07-10T18:44:31.241Z"}
+{"level":"info","message":"Received GET request to /api/monitors?status[$ne]=active","service":"monitor-service","timestamp":"2026-07-10T18:44:31.315Z"}
+{"level":"info","message":"Request body: undefined","service":"monitor-service","timestamp":"2026-07-10T18:44:31.315Z"}
+{"level":"warn","message":"400 Invalid request query","service":"monitor-service","timestamp":"2026-07-10T18:44:31.317Z"}
+{"level":"info","message":"Received GET request to /api/monitors","service":"monitor-service","timestamp":"2026-07-10T18:44:31.320Z"}
+{"level":"info","message":"Request body: undefined","service":"monitor-service","timestamp":"2026-07-10T18:44:31.320Z"}
+{"level":"info","message":"Received GET request to /health","service":"monitor-service","timestamp":"2026-07-10T18:44:31.331Z"}
+{"level":"info","message":"Request body: undefined","service":"monitor-service","timestamp":"2026-07-10T18:44:31.331Z"}
+{"level":"info","message":"Connected to RabbitMQ exchange crashlens.events","service":"monitor-service","timestamp":"2026-07-10T18:44:37.836Z"}
+{"level":"info","message":"Published event with routing key: issue.occurrence.detected","service":"monitor-service","timestamp":"2026-07-10T18:44:38.981Z"}
+{"level":"warn","message":"Uptime monitor 6a513d969d2700bc810baba4 (Local probe target) opened an incident after 2 consecutive failures","service":"monitor-service","timestamp":"2026-07-10T18:44:38.981Z"}
+{"level":"info","message":"Published event with routing key: issue.occurrence.detected","service":"monitor-service","timestamp":"2026-07-10T18:44:39.303Z"}
+{"level":"warn","message":"Uptime monitor 6a513d979d2700bc810baba8 (Local probe target) opened an incident after 1 consecutive failures","service":"monitor-service","timestamp":"2026-07-10T18:44:39.303Z"}
+{"level":"info","message":"Published event with routing key: issue.occurrence.detected","service":"monitor-service","timestamp":"2026-07-10T18:44:39.317Z"}
+{"level":"warn","message":"Uptime monitor 6a513d979d2700bc810baba8 (Local probe target) opened an incident after 1 consecutive failures","service":"monitor-service","timestamp":"2026-07-10T18:44:39.318Z"}
+{"level":"info","message":"Uptime probe tick: checked 5 monitor(s)","service":"monitor-service","timestamp":"2026-07-10T18:44:39.346Z"}
+{"level":"warn","message":"RabbitMQ connection closed","service":"monitor-service","timestamp":"2026-07-10T18:44:39.366Z"}
+{"level":"info","message":"Connected to mongodb","service":"monitor-service","timestamp":"2026-07-10T21:19:59.129Z"}
+{"level":"info","message":"Connected to RabbitMQ exchange crashlens.events","service":"monitor-service","timestamp":"2026-07-10T21:19:59.175Z"}
+{"level":"info","message":"Cron sweep started (every 10000ms)","service":"monitor-service","timestamp":"2026-07-10T21:19:59.178Z"}
+{"level":"info","message":"Uptime prober started (every 10000ms)","service":"monitor-service","timestamp":"2026-07-10T21:19:59.178Z"}
+{"level":"info","message":"monitor-service running on port 3006","service":"monitor-service","timestamp":"2026-07-10T21:19:59.180Z"}
+{"level":"info","message":"Received GET request to /health","service":"monitor-service","timestamp":"2026-07-10T21:20:13.338Z"}
+{"level":"info","message":"Request body: undefined","service":"monitor-service","timestamp":"2026-07-10T21:20:13.339Z"}
+{"level":"info","message":"Received SIGTERM; shutting down monitor-service","service":"monitor-service","timestamp":"2026-07-10T21:25:02.914Z"}
+{"level":"warn","message":"RabbitMQ connection closed","service":"monitor-service","timestamp":"2026-07-10T21:25:02.918Z"}
+{"level":"info","message":"Connected to RabbitMQ exchange crashlens.events","service":"monitor-service","timestamp":"2026-07-10T21:38:48.392Z"}
+{"level":"info","message":"Published event with routing key: issue.occurrence.detected","service":"monitor-service","timestamp":"2026-07-10T21:38:48.466Z"}
+{"level":"warn","message":"Monitor 6a5166687743990cab778414 (Nightly backup) missed its check-in","service":"monitor-service","timestamp":"2026-07-10T21:38:48.466Z"}
+{"level":"info","message":"Published event with routing key: issue.occurrence.detected","service":"monitor-service","timestamp":"2026-07-10T21:38:48.477Z"}
+{"level":"warn","message":"Monitor 6a5166687743990cab778416 (Nightly backup) missed its check-in","service":"monitor-service","timestamp":"2026-07-10T21:38:48.478Z"}
+{"level":"info","message":"Published event with routing key: issue.occurrence.detected","service":"monitor-service","timestamp":"2026-07-10T21:38:48.492Z"}
+{"level":"warn","message":"Check-in 6a5166687743990cab77841b for monitor 6a5166687743990cab77841a timed out","service":"monitor-service","timestamp":"2026-07-10T21:38:48.493Z"}
+{"level":"warn","message":"Timed-out check-in 6a5166687743990cab77841d has no parent monitor (deleted?)","service":"monitor-service","timestamp":"2026-07-10T21:38:48.498Z"}
+{"level":"warn","message":"RabbitMQ connection closed","service":"monitor-service","timestamp":"2026-07-10T21:38:48.513Z"}
+{"level":"info","message":"Received POST request to /api/monitors/6a516668c87d8cea5dc8ea4a/checkins","service":"monitor-service","timestamp":"2026-07-10T21:38:49.057Z"}
+{"level":"info","message":"Request body: {\"status\":\"ok\"}","service":"monitor-service","timestamp":"2026-07-10T21:38:49.059Z"}
+{"level":"warn","message":"400 Invalid request body","service":"monitor-service","timestamp":"2026-07-10T21:38:49.061Z"}
+{"level":"info","message":"Received POST request to /api/monitors/6a516668c87d8cea5dc8ea4a/checkins","service":"monitor-service","timestamp":"2026-07-10T21:38:49.068Z"}
+{"level":"info","message":"Request body: {\"token\":\"[REDACTED]\",\"status\":\"ok\"}","service":"monitor-service","timestamp":"2026-07-10T21:38:49.068Z"}
+{"level":"warn","message":"401 Invalid monitor or check token","service":"monitor-service","timestamp":"2026-07-10T21:38:49.074Z"}
+{"level":"info","message":"Received POST request to /api/monitors/6a516669c87d8cea5dc8ea4b/checkins","service":"monitor-service","timestamp":"2026-07-10T21:38:49.076Z"}
+{"level":"info","message":"Request body: {\"token\":\"[REDACTED]\",\"status\":\"ok\"}","service":"monitor-service","timestamp":"2026-07-10T21:38:49.076Z"}
+{"level":"warn","message":"401 Invalid monitor or check token","service":"monitor-service","timestamp":"2026-07-10T21:38:49.078Z"}
+{"level":"info","message":"Received POST request to /api/monitors/6a516668c87d8cea5dc8ea4a/checkins","service":"monitor-service","timestamp":"2026-07-10T21:38:49.079Z"}
+{"level":"info","message":"Request body: {\"token\":\"[REDACTED]\",\"status\":\"ok\"}","service":"monitor-service","timestamp":"2026-07-10T21:38:49.079Z"}
+{"level":"info","message":"Received POST request to /api/monitors/6a516668c87d8cea5dc8ea4a/checkins","service":"monitor-service","timestamp":"2026-07-10T21:38:49.120Z"}
+{"level":"info","message":"Request body: {\"token\":\"[REDACTED]\"}","service":"monitor-service","timestamp":"2026-07-10T21:38:49.120Z"}
+{"level":"info","message":"Received PATCH request to /api/monitors/6a516668c87d8cea5dc8ea4a/checkins/6a516669c87d8cea5dc8ea4d","service":"monitor-service","timestamp":"2026-07-10T21:38:49.177Z"}
+{"level":"info","message":"Request body: {\"token\":\"[REDACTED]\",\"status\":\"ok\"}","service":"monitor-service","timestamp":"2026-07-10T21:38:49.177Z"}
+{"level":"info","message":"Received POST request to /api/monitors/6a516668c87d8cea5dc8ea4a/checkins","service":"monitor-service","timestamp":"2026-07-10T21:38:49.184Z"}
+{"level":"info","message":"Request body: {\"token\":\"[REDACTED]\"}","service":"monitor-service","timestamp":"2026-07-10T21:38:49.184Z"}
+{"level":"info","message":"Received PATCH request to /api/monitors/6a516668c87d8cea5dc8ea4a/checkins/6a516669c87d8cea5dc8ea4e","service":"monitor-service","timestamp":"2026-07-10T21:38:49.189Z"}
+{"level":"info","message":"Request body: {\"token\":\"[REDACTED]\",\"status\":\"ok\"}","service":"monitor-service","timestamp":"2026-07-10T21:38:49.189Z"}
+{"level":"info","message":"Received PATCH request to /api/monitors/6a516668c87d8cea5dc8ea4a/checkins/6a516669c87d8cea5dc8ea4e","service":"monitor-service","timestamp":"2026-07-10T21:38:49.246Z"}
+{"level":"info","message":"Request body: {\"token\":\"[REDACTED]\",\"status\":\"error\"}","service":"monitor-service","timestamp":"2026-07-10T21:38:49.247Z"}
+{"level":"warn","message":"404 In-progress check-in not found","service":"monitor-service","timestamp":"2026-07-10T21:38:49.249Z"}
+{"level":"info","message":"Received GET request to /api/monitors/6a516668c87d8cea5dc8ea4a/checkins","service":"monitor-service","timestamp":"2026-07-10T21:38:49.251Z"}
+{"level":"info","message":"Request body: undefined","service":"monitor-service","timestamp":"2026-07-10T21:38:49.251Z"}
+{"level":"warn","message":"401 Authentication token is required","service":"monitor-service","timestamp":"2026-07-10T21:38:49.252Z"}
+{"level":"info","message":"Received GET request to /api/monitors/6a516668c87d8cea5dc8ea4a/checkins","service":"monitor-service","timestamp":"2026-07-10T21:38:49.255Z"}
+{"level":"info","message":"Request body: undefined","service":"monitor-service","timestamp":"2026-07-10T21:38:49.255Z"}
+{"level":"info","message":"Received GET request to /api/monitors?status[$ne]=active","service":"monitor-service","timestamp":"2026-07-10T21:38:49.286Z"}
+{"level":"info","message":"Request body: undefined","service":"monitor-service","timestamp":"2026-07-10T21:38:49.286Z"}
+{"level":"warn","message":"400 Invalid request query","service":"monitor-service","timestamp":"2026-07-10T21:38:49.287Z"}
+{"level":"info","message":"Received GET request to /api/monitors","service":"monitor-service","timestamp":"2026-07-10T21:38:49.289Z"}
+{"level":"info","message":"Request body: undefined","service":"monitor-service","timestamp":"2026-07-10T21:38:49.289Z"}
+{"level":"info","message":"Received GET request to /health","service":"monitor-service","timestamp":"2026-07-10T21:38:49.293Z"}
+{"level":"info","message":"Request body: undefined","service":"monitor-service","timestamp":"2026-07-10T21:38:49.293Z"}
+{"level":"info","message":"Connected to RabbitMQ exchange crashlens.events","service":"monitor-service","timestamp":"2026-07-10T21:38:51.074Z"}
+{"level":"info","message":"Published event with routing key: issue.occurrence.detected","service":"monitor-service","timestamp":"2026-07-10T21:38:52.184Z"}
+{"level":"warn","message":"Uptime monitor 6a51666c6557d843c69f6e07 (Local probe target) opened an incident after 2 consecutive failures","service":"monitor-service","timestamp":"2026-07-10T21:38:52.185Z"}
+{"level":"info","message":"Published event with routing key: issue.occurrence.detected","service":"monitor-service","timestamp":"2026-07-10T21:38:52.504Z"}
+{"level":"warn","message":"Uptime monitor 6a51666c6557d843c69f6e0b (Local probe target) opened an incident after 1 consecutive failures","service":"monitor-service","timestamp":"2026-07-10T21:38:52.505Z"}
+{"level":"info","message":"Published event with routing key: issue.occurrence.detected","service":"monitor-service","timestamp":"2026-07-10T21:38:52.516Z"}
+{"level":"warn","message":"Uptime monitor 6a51666c6557d843c69f6e0b (Local probe target) opened an incident after 1 consecutive failures","service":"monitor-service","timestamp":"2026-07-10T21:38:52.516Z"}
+{"level":"info","message":"Uptime probe tick: checked 5 monitor(s)","service":"monitor-service","timestamp":"2026-07-10T21:38:52.543Z"}
+{"level":"warn","message":"RabbitMQ connection closed","service":"monitor-service","timestamp":"2026-07-10T21:38:52.564Z"}

@@ -1,50 +1,34 @@
 require("dotenv").config();
-const express = require("express");
-const cors = require("cors");
-const helmet = require("helmet");
-const errorHandler = require("./middleware/errorHandler");
 const logger = require("./utils/logger");
-const { buildCorsOptions } = require("./utils/cors");
-const projectRoutes = require("./routes/project-route");
+const { assertJwtSecret } = require("./utils/assertJwtSecret");
+const app = require("./app");
 const connectDatabase = require("./config/database");
-const { redactSensitiveFields } = require("./utils/constants");
 const { closeRabbitMQ, connectToRabbitMQ } = require("./utils/rabbitmq");
-const { closeRedis } = require("./utils/redis");
+const { closeRedis, redisClient } = require("./utils/redis");
 
-const app = express();
 const PORT = process.env.PORT || 3002;
-
-app.set("trust proxy", 1);
-
-connectDatabase().catch((e) => logger.error("Mongo connection error", e));
-
-//middleware
-app.use(helmet());
-app.use(cors(buildCorsOptions()));
-app.use(express.json());
-
-app.use((req, res, next) => {
-  logger.info(`Received ${req.method} request to ${req.url}`);
-  logger.info(
-    `Request body: ${JSON.stringify(redactSensitiveFields(req.body))}`,
-  );
-  next();
-});
-
-app.get("/health", (req, res) => {
-  res.status(200).json({
-    success: true,
-    service: "project-service",
-    status: "ok",
-  });
-});
-
-app.use("/api/projects", projectRoutes);
-
-app.use(errorHandler);
 
 async function startServer() {
   try {
+    // Fail closed: refuse to boot if JWT_SECRET is missing or the known
+    // default placeholder, before touching Mongo/RabbitMQ or listening.
+    assertJwtSecret();
+
+    connectDatabase().catch((e) => logger.error("Mongo connection error", e));
+
+    // redisClient is constructed with lazyConnect (see utils/redis.js) so
+    // requiring it doesn't open a connection at module-load time (needed
+    // for app.js to stay side-effect-free in tests). That means something
+    // has to explicitly trigger the connection at real startup - the
+    // controller's canUseRedis() check only reads redisClient.status
+    // without ever issuing a command, so it can never self-trigger the
+    // lazy connect on its own; without this call the cache-aside layer
+    // would silently never leave "wait" status and every cache read/write
+    // would permanently no-op.
+    redisClient
+      .connect()
+      .catch((e) => logger.error("Redis connection error", e));
+
     await connectToRabbitMQ();
     app.listen(PORT, () => {
       logger.info(`project service running on port ${PORT}`);

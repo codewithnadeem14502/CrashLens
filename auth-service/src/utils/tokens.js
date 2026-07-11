@@ -1,8 +1,11 @@
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 
-const getJwtSecret = () =>
-  process.env.JWT_SECRET || "dev-auth-service-secret-change-me";
+// No hardcoded fallback: assertJwtSecret() (called at process boot in
+// server.js) already refuses to start the service if JWT_SECRET is unset
+// or still the known default, so by the time this runs JWT_SECRET is safe
+// to read directly.
+const getJwtSecret = () => process.env.JWT_SECRET;
 
 const hashToken = (token) =>
   crypto.createHash("sha256").update(token).digest("hex");

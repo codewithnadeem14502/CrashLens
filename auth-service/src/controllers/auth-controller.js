@@ -338,7 +338,14 @@ const createOrganizationMember = asyncHandler(async (req, res) => {
 });
 
 const updatePassword = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.user.sub);
+  console.log("req.body", req.body);
+  const email = req.body.email;
+
+  if (email === "") {
+    throw new ApiError(500, "email is required");
+  }
+  const user = await User.findOne({ email });
+  console.log("user ", user);
 
   if (!user || user.status !== AccountStatus.ACTIVE) {
     throw new ApiError(401, "Authentication session is no longer active");

@@ -34,11 +34,40 @@ const ProjectEnvironments = Object.freeze({
 
 const DefaultEnvironment = ProjectEnvironments.PRODUCTION;
 
+const QueueConfig = Object.freeze({
+  EXCHANGE_NAME: process.env.RABBITMQ_EXCHANGE || "crashlens.events",
+  RABBITMQ_URL: process.env.RABBITMQ_URL || "amqp://localhost:5672",
+  // Terminal holding queue for project lifecycle events that failed to
+  // publish even after MAX_RETRY_ATTEMPTS - mirrors the DLQ naming/role
+  // worker-service and issue-service already use, so the same monitoring/
+  // replay tooling conventions apply.
+  DLQ: process.env.PROJECT_EVENTS_DLQ || "project-service.events.dlq",
+  MAX_RETRY_ATTEMPTS: Number.parseInt(
+    process.env.MAX_RETRY_ATTEMPTS || "3",
+    10,
+  ),
+  RETRY_DELAY_MS: Number.parseInt(
+    process.env.PROJECT_EVENTS_RETRY_DELAY_MS || "500",
+    10,
+  ),
+  // DLQ entries carry dsnPublicKey (a bearer credential for event
+  // ingestion, per event-service's DSN check) in plaintext - bound how long
+  // a failed-publish event sits there instead of letting it accumulate
+  // forever, same reasoning as the DsnCache TTL fallback from Module 1.
+  // Expired messages are just dropped (no dead-letter-exchange configured
+  // on this queue) - this is a terminal holding queue for manual triage,
+  // not something that should auto-redeliver on expiry.
+  DLQ_MESSAGE_TTL_MS: Number.parseInt(
+    process.env.PROJECT_EVENTS_DLQ_TTL_MS || `${30 * 24 * 60 * 60 * 1000}`,
+    10,
+  ),
+});
+
 const SENSITIVE_KEYS = new Set([
   "password",
-  "passwordHash",
-  "accessToken",
-  "refreshToken",
+  "passwordhash",
+  "accesstoken",
+  "refreshtoken",
   "token",
   "dsn",
 ]);
@@ -72,7 +101,7 @@ const redactSensitiveFields = (value) => {
   }
 
   return Object.entries(value).reduce((result, [key, fieldValue]) => {
-    result[key] = SENSITIVE_KEYS.has(key)
+    result[key] = SENSITIVE_KEYS.has(key.toLowerCase())
       ? "[REDACTED]"
       : redactSensitiveFields(fieldValue);
 
@@ -88,6 +117,7 @@ module.exports = {
   ProjectStatus,
   ProjectEnvironments,
   DefaultEnvironment,
+  QueueConfig,
   ApiError,
   asyncHandler,
   slugify,

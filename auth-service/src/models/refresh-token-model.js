@@ -28,7 +28,11 @@ const refreshTokenSchema = new mongoose.Schema(
     expiresAt: {
       type: Date,
       required: true,
-      index: true,
+      // TTL index: MongoDB auto-deletes the document once this date is in
+      // the past (expireAfterSeconds: 0 means "expire exactly at the date
+      // stored in the field"). Without this, revoked/expired refresh
+      // tokens accumulate in the collection forever.
+      index: { expires: 0 },
     },
     revokedAt: {
       type: Date,

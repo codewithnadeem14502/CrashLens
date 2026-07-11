@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
-    "check": "node --check src/server.js && node --check src/controllers/event-controller.js && node --check src/routes/event-route.js && node --check src/models/dsn-cache-model.js && node --check src/events/project-event-consumer.js && node --check src/events/event-publisher.js && node --check src/utils/dsn.js && node --check src/utils/validation.js && node --check src/utils/rabbitmq.js"
+    "check": "node --check src/app.js && node --check src/server.js && node --check src/controllers/event-controller.js && node --check src/routes/event-route.js && node --check src/models/dsn-cache-model.js && node --check src/events/project-event-consumer.js && node --check src/events/event-publisher.js && node --check src/utils/dsn.js && node --check src/utils/validation.js && node --check src/utils/rabbitmq.js",
+    "test": "node --test --test-concurrency=1"
   },
   "keywords": [],
   "author": "",
@@ -27,6 +28,7 @@
     "winston": "^3.19.0"
   },
   "devDependencies": {
-    "nodemon": "^3.1.14"
+    "nodemon": "^3.1.14",
+    "supertest": "^7.2.2"
   }
 }

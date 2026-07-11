@@ -61,9 +61,8 @@ router.post(
 );
 
 router.patch(
-  "/me/password",
+  "/update-password",
   validateRequest(authValidation.updatePassword),
-  authenticate,
   authController.updatePassword,
 );
 

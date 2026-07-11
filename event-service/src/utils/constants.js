@@ -37,15 +37,35 @@ const DefaultEnvironment = ProjectEnvironments.PRODUCTION;
 const EventTypes = Object.freeze({
   EVENT_INGESTED: "event.ingested",
   TRANSACTION_INGESTED: "transaction.ingested",
+  LOGS_INGESTED: "logs.ingested",
 });
 
+const LogLevels = Object.freeze({
+  DEBUG: "debug",
+  INFO: "info",
+  WARN: "warn",
+  ERROR: "error",
+  FATAL: "fatal",
+});
+
+// Synced to match issue-service's fuller SENSITIVE_KEYS list (Module 7
+// review finding): this service's request-logging middleware redacts req.body
+// before logging it, and Module 7's new `logs[].context` field is the first
+// place a genuinely free-form, producer-controlled object flows through this
+// exact code path at high volume - a caller putting an "authorization" or
+// "cookie" key inside `context` would previously have logged in cleartext
+// here even though the identical field name is already redacted by
+// issue-service. Keep in sync with issue-service/src/utils/constants.js.
 const SENSITIVE_KEYS = new Set([
   "password",
-  "passwordHash",
-  "accessToken",
-  "refreshToken",
+  "passwordhash",
+  "accesstoken",
+  "refreshtoken",
   "token",
   "dsn",
+  "dsnpublickey",
+  "authorization",
+  "cookie",
 ]);
 
 class ApiError extends Error {
@@ -77,7 +97,7 @@ const redactSensitiveFields = (value) => {
   }
 
   return Object.entries(value).reduce((result, [key, fieldValue]) => {
-    result[key] = SENSITIVE_KEYS.has(key)
+    result[key] = SENSITIVE_KEYS.has(key.toLowerCase())
       ? "[REDACTED]"
       : redactSensitiveFields(fieldValue);
 
@@ -94,6 +114,7 @@ module.exports = {
   ProjectEnvironments,
   DefaultEnvironment,
   EventTypes,
+  LogLevels,
   ApiError,
   asyncHandler,
   slugify,

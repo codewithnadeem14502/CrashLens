@@ -1,45 +1,23 @@
 require("dotenv").config();
-const express = require("express");
-const cors = require("cors");
-const helmet = require("helmet");
-const errorHandler = require("./middleware/errorHandler");
 const logger = require("./utils/logger");
-const { buildCorsOptions } = require("./utils/cors");
-const authRoutes = require("./routes/auth-route");
-const connectDatabase = require("./config/database");
-const { redactSensitiveFields } = require("./utils/constants");
+const { assertJwtSecret } = require("./utils/assertJwtSecret");
 
-const app = express();
+// Fail closed: refuse to boot if JWT_SECRET is missing or the known
+// default placeholder. Must run before anything else starts (DB connect,
+// app setup) so a misconfigured deploy never serves traffic.
+try {
+  assertJwtSecret();
+} catch (error) {
+  logger.error(`FATAL: ${error.message}`);
+  process.exit(1);
+}
+
+const app = require("./app");
+const connectDatabase = require("./config/database");
+
 const PORT = process.env.PORT || 3001;
 
-app.set("trust proxy", 1);
-
 connectDatabase().catch((e) => logger.error("Mongo connection error", e));
-
-//middleware
-app.use(helmet());
-app.use(cors(buildCorsOptions()));
-app.use(express.json());
-
-app.use((req, res, next) => {
-  logger.info(`Received ${req.method} request to ${req.url}`);
-  logger.info(
-    `Request body: ${JSON.stringify(redactSensitiveFields(req.body))}`,
-  );
-  next();
-});
-
-app.get("/health", (req, res) => {
-  res.status(200).json({
-    success: true,
-    service: "auth-service",
-    status: "ok",
-  });
-});
-
-app.use("/api/auth", authRoutes);
-
-app.use(errorHandler);
 
 app.listen(PORT, () => {
   logger.info(`auth service running on port ${PORT}`);

@@ -3,6 +3,7 @@ const DsnCache = require("../models/dsn-cache-model");
 const {
   publishEventIngested,
   publishTransactionIngested,
+  publishLogsIngested,
 } = require("../events/event-publisher");
 const { ApiError, ProjectStatus, asyncHandler } = require("../utils/constants");
 const { parseDsn } = require("../utils/dsn");
@@ -10,6 +11,7 @@ const logger = require("../utils/logger");
 const {
   validateEventPayload,
   validateTransactionPayload,
+  validateLogsPayload,
 } = require("../utils/validation");
 
 const getActiveDsnCache = async (parsedDsn) => {
@@ -97,7 +99,39 @@ const ingestTransaction = asyncHandler(async (req, res) => {
   });
 });
 
+const ingestLogs = asyncHandler(async (req, res) => {
+  const payload = validateLogsPayload(req.body);
+  const parsedDsn = parseDsn(payload.dsn);
+
+  logger.info(
+    `Received a batch of ${payload.logs.length} log(s) for project ${parsedDsn.projectId}`,
+  );
+
+  const dsnCache = await getActiveDsnCache(parsedDsn);
+  const batchId = `logs_${crypto.randomUUID()}`;
+
+  logger.info(
+    `Publishing ingested log batch ${batchId} for project ${parsedDsn.projectId}`,
+  );
+
+  await publishLogsIngested({
+    batchId,
+    dsnCache,
+    parsedDsn,
+    logs: payload.logs,
+  });
+
+  logger.info(`Accepted log batch ${batchId} for project ${parsedDsn.projectId}`);
+
+  return res.status(202).json({
+    success: true,
+    message: "Logs accepted",
+    batchId,
+  });
+});
+
 module.exports = {
   ingestEvent,
   ingestTransaction,
+  ingestLogs,
 };

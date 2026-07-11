@@ -1,0 +1,30 @@
+{
+  "name": "alert-service",
+  "version": "1.0.0",
+  "description": "CrashLens custom dashboards and alert evaluation service",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "check": "node --check src/app.js && node --check src/server.js && node --check src/controllers/dashboard-controller.js && node --check src/controllers/query-controller.js && node --check src/controllers/alert-rule-controller.js && node --check src/jobs/alert-evaluator.js && node --check src/models/dashboard-model.js && node --check src/models/alert-rule-model.js && node --check src/models/alert-event-model.js && node --check src/models/query-definition-schema.js && node --check src/notifications/dispatcher.js && node --check src/notifications/email-action.js && node --check src/notifications/webhook-action.js && node --check src/query/query-executor.js && node --check src/query/service-client.js && node --check src/routes/dashboard-route.js && node --check src/routes/query-route.js && node --check src/routes/alert-route.js && node --check src/validators/query-validator.js && node --check src/validators/dashboard-validator.js && node --check src/validators/alert-rule-validator.js && node --check src/utils/ssrfGuard.js && node --check src/utils/constants.js && node --check src/utils/tokens.js",
+    "test": "node --test --test-concurrency=1 --test-timeout=20000"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "helmet": "^8.2.0",
+    "joi": "^18.2.3",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^9.7.3",
+    "nodemailer": "^9.0.3",
+    "winston": "^3.19.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14",
+    "supertest": "^7.1.4"
+  }
+}

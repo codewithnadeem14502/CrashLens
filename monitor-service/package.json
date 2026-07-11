@@ -1,0 +1,31 @@
+{
+  "name": "monitor-service",
+  "version": "1.0.0",
+  "description": "CrashLens cron and uptime monitoring service",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "check": "node --check src/app.js && node --check src/server.js && node --check src/controllers/monitor-controller.js && node --check src/controllers/uptime-controller.js && node --check src/events/occurrence-publisher.js && node --check src/jobs/cron-sweep.js && node --check src/jobs/uptime-prober.js && node --check src/models/monitor-model.js && node --check src/models/uptime-model.js && node --check src/routes/monitor-route.js && node --check src/routes/uptime-route.js && node --check src/utils/rabbitmq.js && node --check src/utils/schedule.js",
+    "test": "node --test --test-concurrency=1 --test-timeout=20000"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "amqplib": "^2.0.1",
+    "cors": "^2.8.6",
+    "cron-parser": "^4.9.0",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "helmet": "^8.2.0",
+    "joi": "^18.2.3",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^9.7.3",
+    "winston": "^3.19.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14",
+    "supertest": "^7.1.4"
+  }
+}

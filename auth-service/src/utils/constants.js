@@ -29,6 +29,8 @@ const Permissions = Object.freeze({
   ISSUE_UPDATE: "issue:update",
   ALERT_VIEW: "alert:view",
   ALERT_MANAGE: "alert:manage",
+  MONITOR_VIEW: "monitor:view",
+  MONITOR_MANAGE: "monitor:manage",
 });
 
 const RolePermissions = Object.freeze({
@@ -47,6 +49,8 @@ const RolePermissions = Object.freeze({
     Permissions.ISSUE_UPDATE,
     Permissions.ALERT_VIEW,
     Permissions.ALERT_MANAGE,
+    Permissions.MONITOR_VIEW,
+    Permissions.MONITOR_MANAGE,
   ]),
   [Roles.DEVELOPER]: Object.freeze([
     Permissions.ORGANIZATION_VIEW,
@@ -55,12 +59,15 @@ const RolePermissions = Object.freeze({
     Permissions.ISSUE_VIEW,
     Permissions.ISSUE_UPDATE,
     Permissions.ALERT_VIEW,
+    Permissions.MONITOR_VIEW,
+    Permissions.MONITOR_MANAGE,
   ]),
   [Roles.VIEWER]: Object.freeze([
     Permissions.ORGANIZATION_VIEW,
     Permissions.PROJECT_VIEW,
     Permissions.ISSUE_VIEW,
     Permissions.ALERT_VIEW,
+    Permissions.MONITOR_VIEW,
   ]),
 });
 
@@ -86,9 +93,9 @@ const MembershipStatus = Object.freeze({
 
 const SENSITIVE_KEYS = new Set([
   "password",
-  "passwordHash",
-  "accessToken",
-  "refreshToken",
+  "passwordhash",
+  "accesstoken",
+  "refreshtoken",
   "token",
 ]);
 
@@ -121,7 +128,7 @@ const redactSensitiveFields = (value) => {
   }
 
   return Object.entries(value).reduce((result, [key, fieldValue]) => {
-    result[key] = SENSITIVE_KEYS.has(key)
+    result[key] = SENSITIVE_KEYS.has(key.toLowerCase())
       ? "[REDACTED]"
       : redactSensitiveFields(fieldValue);
 

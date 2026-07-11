@@ -270,7 +270,14 @@ const createProject = asyncHandler(async (req, res) => {
     projectId: project._id,
   });
 
-  await publishProjectCreated(project);
+  // Not awaited: publishProjectCreated already retries + DLQs internally
+  // and never rejects, so awaiting it here would only serialize its full
+  // retry/backoff latency (and any broker-connect hang, unbounded if the
+  // broker network-partitions rather than cleanly refusing) onto this
+  // request for no benefit - the response below doesn't use its result.
+  publishProjectCreated(project).catch((error) =>
+    logger.error(`Unexpected error publishing project.created: ${error.message}`),
+  );
 
   return res.status(201).json({
     success: true,
@@ -416,7 +423,10 @@ const updateProject = asyncHandler(async (req, res) => {
 
   logger.info(`Updated project ${project._id} by user ${req.user.sub}`);
 
-  await publishProjectUpdated(project);
+  // Not awaited - see the same note on publishProjectCreated above.
+  publishProjectUpdated(project).catch((error) =>
+    logger.error(`Unexpected error publishing project.updated: ${error.message}`),
+  );
 
   return res.status(200).json({
     success: true,
@@ -455,7 +465,10 @@ const archiveProject = asyncHandler(async (req, res) => {
 
   logger.info(`Archived project ${project._id} by user ${req.user.sub}`);
 
-  await publishProjectArchived(project);
+  // Not awaited - see the same note on publishProjectCreated above.
+  publishProjectArchived(project).catch((error) =>
+    logger.error(`Unexpected error publishing project.archived: ${error.message}`),
+  );
 
   return res.status(200).json({
     success: true,
@@ -537,7 +550,10 @@ const regenerateProjectDsn = asyncHandler(async (req, res) => {
 
   logger.warn(`Regenerated DSN for project ${project._id} by user ${req.user.sub}`);
 
-  await publishProjectDsnRegenerated({ project, oldDsnPublicKey });
+  // Not awaited - see the same note on publishProjectCreated above.
+  publishProjectDsnRegenerated({ project, oldDsnPublicKey }).catch((error) =>
+    logger.error(`Unexpected error publishing project.dsn.regenerated: ${error.message}`),
+  );
 
   return res.status(200).json({
     success: true,

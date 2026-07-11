@@ -66,12 +66,12 @@ const SENSITIVE_KEYS = new Set([
   "authorization",
   "cookie",
   "dsn",
-  "dsnPublicKey",
+  "dsnpublickey",
   "password",
-  "passwordHash",
-  "refreshToken",
+  "passwordhash",
+  "refreshtoken",
   "token",
-  "accessToken",
+  "accesstoken",
 ]);
 
 class ApiError extends Error {
@@ -105,7 +105,7 @@ const redactSensitiveFields = (value) => {
   }
 
   return Object.entries(value).reduce((result, [key, fieldValue]) => {
-    result[key] = SENSITIVE_KEYS.has(key)
+    result[key] = SENSITIVE_KEYS.has(key.toLowerCase())
       ? "[REDACTED]"
       : redactSensitiveFields(fieldValue);
     return result;

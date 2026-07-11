@@ -58,6 +58,7 @@ const login = {
 
 const updatePassword = {
   body: Joi.object({
+    email: email.required(),
     newPassword: password.required().messages({
       "any.required": "newPassword is required",
       "string.empty": "newPassword is required",
