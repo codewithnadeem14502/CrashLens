@@ -1,4 +1,4 @@
-# Production compose file for a single Oracle Cloud "Always Free" VM.
+# Production compose file for a single VPS (currently Hostinger KVM).
 # See DEPLOY.md for the full runbook. Bring up with:
 #   docker compose --env-file .env up -d --build
 #
