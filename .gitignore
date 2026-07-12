@@ -1,2 +1,9 @@
 .claude
 .DS_Store
+node_modules
+
+# Real per-service env files (secrets) - never commit these.
+# .env.example files are the checked-in templates and stay tracked.
+.env
+**/.env
+!.env.deploy.example

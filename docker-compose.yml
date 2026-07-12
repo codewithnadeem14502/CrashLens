@@ -1,0 +1,268 @@
+# Production compose file for a single Oracle Cloud "Always Free" VM.
+# See DEPLOY.md for the full runbook. Bring up with:
+#   docker compose --env-file .env up -d --build
+#
+# Topology: Caddy is the only container with a published host port (80/443).
+# Everything else talks over the private "crashlens" network by service name
+# (e.g. http://auth-service:3001, amqp://rabbitmq:5672, redis://redis:6379).
+# MongoDB is NOT here - each service reaches MongoDB Atlas directly over the
+# internet via its own MONGODB_URI.
+
+networks:
+  crashlens:
+    driver: bridge
+
+volumes:
+  rabbitmq_data:
+  redis_data:
+  caddy_data:
+  caddy_config:
+
+services:
+  # ---------------------------------------------------------------------
+  # Shared infra: RabbitMQ (broker) + Redis (gateway rate limiting, project cache)
+  # ---------------------------------------------------------------------
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    restart: unless-stopped
+    networks: [crashlens]
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 10s
+      retries: 6
+      start_period: 30s
+    # Management UI (15672) is intentionally not published to the host -
+    # reach it via an SSH tunnel (ssh -L 15672:localhost:15672 <vm>) if needed.
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    networks: [crashlens]
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 10s
+
+  # ---------------------------------------------------------------------
+  # App services - each builds from its own existing Dockerfile.
+  # PORT is intentionally left unset so every service falls back to its
+  # in-code default (matches the *_SERVICE_URL values below).
+  # ---------------------------------------------------------------------
+  auth-service:
+    build: { context: ./auth-service }
+    restart: unless-stopped
+    networks: [crashlens]
+    environment:
+      NODE_ENV: production
+      LOG_LEVEL: info
+      MONGODB_URI: ${MONGODB_BASE_URI}/auth-service?retryWrites=false&appName=Cluster0
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: 5m
+      REFRESH_TOKEN_EXPIRES_IN_DAYS: 15
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:3001/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  project-service:
+    build: { context: ./project-service }
+    restart: unless-stopped
+    networks: [crashlens]
+    depends_on:
+      rabbitmq: { condition: service_healthy }
+      redis: { condition: service_healthy }
+    environment:
+      NODE_ENV: production
+      LOG_LEVEL: info
+      MONGODB_URI: ${MONGODB_BASE_URI}/project-service?retryWrites=false&appName=Cluster0
+      REDIS_URL: redis://redis:6379
+      RABBITMQ_URL: amqp://rabbitmq:5672
+      JWT_SECRET: ${JWT_SECRET}
+      ACCESS_TOKEN_ISSUER: crash-lens-auth-service
+      JWT_EXPIRES_IN: 5m
+      REFRESH_TOKEN_EXPIRES_IN_DAYS: 15
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:3002/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  event-service:
+    build: { context: ./event-service }
+    restart: unless-stopped
+    networks: [crashlens]
+    depends_on:
+      rabbitmq: { condition: service_healthy }
+    environment:
+      NODE_ENV: production
+      LOG_LEVEL: info
+      MONGODB_URI: ${MONGODB_BASE_URI}/event-service?retryWrites=false&appName=Cluster0
+      RABBITMQ_URL: amqp://rabbitmq:5672
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:3003/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  worker-service:
+    build: { context: ./worker-service }
+    restart: unless-stopped
+    networks: [crashlens]
+    depends_on:
+      rabbitmq: { condition: service_healthy }
+    environment:
+      NODE_ENV: production
+      LOG_LEVEL: info
+      MONGODB_URI: ${MONGODB_BASE_URI}/worker-service?retryWrites=false&appName=Cluster0
+      RABBITMQ_URL: amqp://rabbitmq:5672
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:3004/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  issue-service:
+    build: { context: ./issue-service }
+    restart: unless-stopped
+    networks: [crashlens]
+    depends_on:
+      rabbitmq: { condition: service_healthy }
+    environment:
+      NODE_ENV: production
+      LOG_LEVEL: info
+      MONGODB_URI: ${MONGODB_BASE_URI}/issue-service?retryWrites=false&appName=Cluster0
+      RABBITMQ_URL: amqp://rabbitmq:5672
+      JWT_SECRET: ${JWT_SECRET}
+      ACCESS_TOKEN_ISSUER: crash-lens-auth-service
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:3005/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  monitor-service:
+    build: { context: ./monitor-service }
+    restart: unless-stopped
+    networks: [crashlens]
+    depends_on:
+      rabbitmq: { condition: service_healthy }
+    environment:
+      NODE_ENV: production
+      LOG_LEVEL: info
+      MONGODB_URI: ${MONGODB_BASE_URI}/monitor-service?retryWrites=false&appName=Cluster0
+      RABBITMQ_URL: amqp://rabbitmq:5672
+      JWT_SECRET: ${JWT_SECRET}
+      ACCESS_TOKEN_ISSUER: crash-lens-auth-service
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:3006/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    # NEVER scale this past 1 replica - its cron/uptime setInterval sweeps
+    # have no leader election and would double-fire.
+    deploy:
+      replicas: 1
+
+  alert-service:
+    build: { context: ./alert-service }
+    restart: unless-stopped
+    networks: [crashlens]
+    depends_on:
+      - issue-service
+      - monitor-service
+    environment:
+      NODE_ENV: production
+      LOG_LEVEL: info
+      MONGODB_URI: ${MONGODB_BASE_URI}/alert-service?retryWrites=false&appName=Cluster0
+      JWT_SECRET: ${JWT_SECRET}
+      ACCESS_TOKEN_ISSUER: crash-lens-auth-service
+      ISSUE_SERVICE_URL: http://issue-service:3005
+      MONITOR_SERVICE_URL: http://monitor-service:3006
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_SECURE: ${SMTP_SECURE}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASS: ${SMTP_PASS}
+      SMTP_FROM: ${SMTP_FROM}
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:3007/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    # NEVER scale this past 1 replica - its alert-evaluation sweep has no
+    # leader election and would double-fire notifications.
+    deploy:
+      replicas: 1
+
+  api-gateway:
+    build: { context: ./api-gateway }
+    restart: unless-stopped
+    networks: [crashlens]
+    depends_on:
+      redis: { condition: service_healthy }
+      auth-service: { condition: service_started }
+      project-service: { condition: service_started }
+      event-service: { condition: service_started }
+      issue-service: { condition: service_started }
+      monitor-service: { condition: service_started }
+      alert-service: { condition: service_started }
+    environment:
+      NODE_ENV: production
+      LOG_LEVEL: info
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: ${JWT_SECRET}
+      ACCESS_TOKEN_ISSUER: crash-lens-auth-service
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
+      CORS_CREDENTIALS: "true"
+      RATE_LIMIT_WINDOW_MS: 60000
+      RATE_LIMIT_MAX_REQUESTS: 300
+      AUTH_SERVICE_URL: http://auth-service:3001
+      PROJECT_SERVICE_URL: http://project-service:3002
+      EVENT_SERVICE_URL: http://event-service:3003
+      ISSUE_SERVICE_URL: http://issue-service:3005
+      MONITOR_SERVICE_URL: http://monitor-service:3006
+      ALERT_SERVICE_URL: http://alert-service:3007
+    healthcheck:
+      # api-gateway has no HTTP /health route (it's a pure proxy), so this
+      # checks raw TCP connectivity on its port via Node itself instead of
+      # an HTTP status code.
+      test: ["CMD", "node", "-e", "require('net').connect(3000,'127.0.0.1').on('connect',()=>process.exit(0)).on('error',()=>process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  # ---------------------------------------------------------------------
+  # Edge: Caddy terminates TLS (auto Let's Encrypt) and reverse-proxies to
+  # the gateway. This is the only container exposed to the internet.
+  # ---------------------------------------------------------------------
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    networks: [crashlens]
+    depends_on:
+      - api-gateway
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config

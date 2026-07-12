@@ -1,0 +1,13 @@
+{$DOMAIN} {
+	# Automatic HTTPS via Let's Encrypt - requires DOMAIN to already resolve
+	# (an A record, e.g. DuckDNS) to this VM's public IP before Caddy can
+	# obtain a certificate.
+	reverse_proxy api-gateway:3000
+
+	encode gzip
+
+	log {
+		output stdout
+		format console
+	}
+}
