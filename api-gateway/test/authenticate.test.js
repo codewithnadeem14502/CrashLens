@@ -54,12 +54,15 @@ test("ingestion routes (/v1/events*) bypass JWT entirely, by design", () => {
   assert.equal(res.statusCode, null);
 });
 
-test("public auth routes (login, register, refresh, logout) bypass JWT", () => {
+test("public auth routes (login, register, refresh, logout, demo) bypass JWT", () => {
   const publicRoutes = [
     { method: "POST", path: "/v1/auth/login" },
     { method: "POST", path: "/v1/auth/organizations" },
     { method: "POST", path: "/v1/auth/refresh-token" },
     { method: "POST", path: "/v1/auth/logout" },
+    // Demo login is how the credential-less demo token is obtained -
+    // public here, gated behind DEMO_LOGIN_ENABLED inside auth-service.
+    { method: "POST", path: "/v1/auth/demo-login" },
   ];
 
   for (const route of publicRoutes) {

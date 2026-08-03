@@ -55,10 +55,47 @@ const rateLimiter = rateLimit({
   },
 });
 
+// Much tighter per-IP limit for POST /v1/auth/demo-login specifically.
+// The global limiter above is a throughput budget for a whole browsing
+// session; demo-login is a click-once-per-visit route that, unlike every
+// other unauthenticated route, *writes* (a RefreshToken document per
+// call) with no credential required. Applied in app.js before the global
+// limiter, so it can't be diluted by the generous global allowance.
+const DEMO_LOGIN_WINDOW_MS = Number.parseInt(
+  process.env.DEMO_LOGIN_RATE_LIMIT_WINDOW_MS || `${60 * 60 * 1000}`,
+  10,
+);
+// 30/hour/IP: two orders of magnitude below the global 300/min, but still
+// generous enough for several real visitors behind one office/campus NAT -
+// this is a "click once per visit" button, not a per-user quota.
+const DEMO_LOGIN_MAX_REQUESTS = Number.parseInt(
+  process.env.DEMO_LOGIN_RATE_LIMIT_MAX_REQUESTS || "30",
+  10,
+);
+
+const demoLoginRateLimiter = rateLimit({
+  windowMs: DEMO_LOGIN_WINDOW_MS,
+  limit: DEMO_LOGIN_MAX_REQUESTS,
+  standardHeaders: true,
+  legacyHeaders: false,
+  store: new RedisStore({
+    prefix: process.env.RATE_LIMIT_KEY_PREFIX
+      ? `${process.env.RATE_LIMIT_KEY_PREFIX}demo-login:`
+      : "rl:gateway:demo-login:",
+    sendCommand: (...args) => redisClient.call(...args),
+  }),
+  handler: (req, res) => {
+    res.status(429).json({
+      message: "Too many demo sessions from this address, try again later.",
+    });
+  },
+});
+
 // Exported as a property on the middleware function itself (rather than
 // wrapping the export in an object) so `app.use(rateLimiter)` keeps working
 // unchanged, while tests can still reach the underlying client to clean up
 // keys / close the connection after a run.
 rateLimiter.redisClient = redisClient;
+rateLimiter.demoLoginRateLimiter = demoLoginRateLimiter;
 
 module.exports = rateLimiter;

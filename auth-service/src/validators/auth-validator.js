@@ -56,9 +56,16 @@ const login = {
     .unknown(false),
 };
 
+// currentPassword is the ownership proof (see auth-controller.updatePassword)
+// - typed loosely like login's password field, since it's verified against
+// the stored hash rather than being newly created.
 const updatePassword = {
   body: Joi.object({
     email: email.required(),
+    currentPassword: Joi.string().min(1).max(128).required().messages({
+      "any.required": "currentPassword is required",
+      "string.empty": "currentPassword is required",
+    }),
     newPassword: password.required().messages({
       "any.required": "newPassword is required",
       "string.empty": "newPassword is required",
@@ -66,6 +73,12 @@ const updatePassword = {
   })
     .required()
     .unknown(false),
+};
+
+// demo-login reads nothing from the request - reject any body outright so
+// that stays enforced rather than merely documented.
+const demoLogin = {
+  body: Joi.object({}).unknown(false),
 };
 
 const refreshTokenPayload = {
@@ -120,6 +133,7 @@ module.exports = {
   getOrganization,
   getOrganizationMembers,
   login,
+  demoLogin,
   refreshTokenPayload,
   updatePassword,
   updateOrganizationMemberRole,

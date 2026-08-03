@@ -63,6 +63,10 @@ const refreshTokenSchema = new mongoose.Schema(
     },
     userAgent: {
       type: String,
+      // Bounded at the call site (auth-controller's issueTokenPair), not
+      // with a maxlength validator: this is attacker-controlled on the
+      // unauthenticated demo-login route, and an over-long value should be
+      // truncated, never turned into a 500.
       default: null,
     },
   },

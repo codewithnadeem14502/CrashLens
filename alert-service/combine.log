@@ -1,0 +1,58 @@
+{"level":"warn","message":"Notification delivery failed (webhook -> https://hooks.example.com/incoming): upstream webhook receiver returned 500","service":"alert-service","timestamp":"2026-08-01T23:19:32.909Z"}
+{"level":"warn","message":"Alert rule 6a6e7f04523d28f510bbf35a evaluation query failed: upstream service unreachable","service":"alert-service","timestamp":"2026-08-01T23:19:32.924Z"}
+{"level":"info","message":"Received POST request to /api/alerts/rules","service":"alert-service","timestamp":"2026-08-01T23:19:33.347Z"}
+{"level":"info","message":"Request body: {\"name\":\"High error rate\",\"query\":{\"dataset\":\"transactions\",\"aggregate\":\"error_rate\",\"filters\":{},\"timeWindowMinutes\":15},\"thresholdType\":\"static\",\"direction\":\"above\",\"warningThreshold\":5,\"criticalThreshold\":15,\"resolveThreshold\":10}","service":"alert-service","timestamp":"2026-08-01T23:19:33.348Z"}
+{"level":"warn","message":"400 Invalid request body","service":"alert-service","timestamp":"2026-08-01T23:19:33.351Z"}
+{"level":"info","message":"Received POST request to /api/alerts/rules","service":"alert-service","timestamp":"2026-08-01T23:19:33.357Z"}
+{"level":"info","message":"Request body: {\"name\":\"High error rate\",\"query\":{\"dataset\":\"transactions\",\"aggregate\":\"error_rate\",\"filters\":{},\"timeWindowMinutes\":15},\"thresholdType\":\"static\",\"direction\":\"above\",\"warningThreshold\":5,\"criticalThreshold\":15,\"resolveThreshold\":2}","service":"alert-service","timestamp":"2026-08-01T23:19:33.357Z"}
+{"level":"warn","message":"403 Permission denied","service":"alert-service","timestamp":"2026-08-01T23:19:33.359Z"}
+{"level":"info","message":"Received POST request to /api/alerts/rules","service":"alert-service","timestamp":"2026-08-01T23:19:33.362Z"}
+{"level":"info","message":"Request body: {\"name\":\"High error rate\",\"query\":{\"dataset\":\"transactions\",\"aggregate\":\"error_rate\",\"filters\":{},\"timeWindowMinutes\":15},\"thresholdType\":\"static\",\"direction\":\"above\",\"warningThreshold\":5,\"criticalThreshold\":15,\"resolveThreshold\":2}","service":"alert-service","timestamp":"2026-08-01T23:19:33.362Z"}
+{"level":"info","message":"Received POST request to /api/alerts/rules","service":"alert-service","timestamp":"2026-08-01T23:19:33.692Z"}
+{"level":"info","message":"Request body: {\"name\":\"Readable by viewer\",\"query\":{\"dataset\":\"transactions\",\"aggregate\":\"error_rate\",\"filters\":{},\"timeWindowMinutes\":15},\"thresholdType\":\"static\",\"direction\":\"above\",\"warningThreshold\":5,\"criticalThreshold\":15,\"resolveThreshold\":2}","service":"alert-service","timestamp":"2026-08-01T23:19:33.693Z"}
+{"level":"info","message":"Received GET request to /api/alerts/rules","service":"alert-service","timestamp":"2026-08-01T23:19:33.735Z"}
+{"level":"info","message":"Request body: undefined","service":"alert-service","timestamp":"2026-08-01T23:19:33.735Z"}
+{"level":"info","message":"Received GET request to /api/alerts/rules/6a6e7f0534982b0fc7087032","service":"alert-service","timestamp":"2026-08-01T23:19:33.754Z"}
+{"level":"info","message":"Request body: undefined","service":"alert-service","timestamp":"2026-08-01T23:19:33.754Z"}
+{"level":"info","message":"Received POST request to /api/alerts/rules","service":"alert-service","timestamp":"2026-08-01T23:19:33.775Z"}
+{"level":"info","message":"Request body: {\"name\":\"Pausable\",\"query\":{\"dataset\":\"transactions\",\"aggregate\":\"error_rate\",\"filters\":{},\"timeWindowMinutes\":15},\"thresholdType\":\"static\",\"direction\":\"above\",\"warningThreshold\":5,\"criticalThreshold\":15,\"resolveThreshold\":2}","service":"alert-service","timestamp":"2026-08-01T23:19:33.775Z"}
+{"level":"info","message":"Received PATCH request to /api/alerts/rules/6a6e7f0534982b0fc7087033","service":"alert-service","timestamp":"2026-08-01T23:19:33.801Z"}
+{"level":"info","message":"Request body: {\"status\":\"paused\"}","service":"alert-service","timestamp":"2026-08-01T23:19:33.802Z"}
+{"level":"info","message":"Received DELETE request to /api/alerts/rules/6a6e7f0534982b0fc7087034","service":"alert-service","timestamp":"2026-08-01T23:19:33.851Z"}
+{"level":"info","message":"Request body: undefined","service":"alert-service","timestamp":"2026-08-01T23:19:33.851Z"}
+{"level":"info","message":"Received GET request to /api/alerts/rules/6a6e7f0534982b0fc7087036/events","service":"alert-service","timestamp":"2026-08-01T23:19:33.960Z"}
+{"level":"info","message":"Request body: undefined","service":"alert-service","timestamp":"2026-08-01T23:19:33.960Z"}
+{"level":"info","message":"Received GET request to /api/dashboards","service":"alert-service","timestamp":"2026-08-01T23:19:34.553Z"}
+{"level":"info","message":"Request body: undefined","service":"alert-service","timestamp":"2026-08-01T23:19:34.555Z"}
+{"level":"warn","message":"401 Authentication token is required","service":"alert-service","timestamp":"2026-08-01T23:19:34.555Z"}
+{"level":"info","message":"Received POST request to /api/dashboards","service":"alert-service","timestamp":"2026-08-01T23:19:34.565Z"}
+{"level":"info","message":"Request body: {\"name\":\"Blocked\"}","service":"alert-service","timestamp":"2026-08-01T23:19:34.565Z"}
+{"level":"warn","message":"403 Permission denied","service":"alert-service","timestamp":"2026-08-01T23:19:34.567Z"}
+{"level":"info","message":"Received POST request to /api/dashboards","service":"alert-service","timestamp":"2026-08-01T23:19:34.570Z"}
+{"level":"info","message":"Request body: {\"name\":\"Bad widget\",\"widgets\":[{\"title\":\"Open critical issues\",\"chartType\":\"stat\",\"query\":{\"dataset\":\"issues\",\"aggregate\":\"p95_duration_ms\",\"filters\":{\"severity\":\"critical\"},\"timeWindowMinutes\":60}}]}","service":"alert-service","timestamp":"2026-08-01T23:19:34.570Z"}
+{"level":"warn","message":"400 Invalid request body","service":"alert-service","timestamp":"2026-08-01T23:19:34.572Z"}
+{"level":"info","message":"Received POST request to /api/dashboards","service":"alert-service","timestamp":"2026-08-01T23:19:34.574Z"}
+{"level":"info","message":"Request body: {\"name\":\"Overview\",\"widgets\":[{\"title\":\"Open critical issues\",\"chartType\":\"stat\",\"query\":{\"dataset\":\"issues\",\"aggregate\":\"count\",\"filters\":{\"severity\":\"critical\"},\"timeWindowMinutes\":60}}]}","service":"alert-service","timestamp":"2026-08-01T23:19:34.574Z"}
+{"level":"info","message":"Received POST request to /api/dashboards","service":"alert-service","timestamp":"2026-08-01T23:19:34.600Z"}
+{"level":"info","message":"Request body: {\"name\":\"Other org dashboard\"}","service":"alert-service","timestamp":"2026-08-01T23:19:34.600Z"}
+{"level":"info","message":"Received GET request to /api/dashboards","service":"alert-service","timestamp":"2026-08-01T23:19:34.607Z"}
+{"level":"info","message":"Request body: undefined","service":"alert-service","timestamp":"2026-08-01T23:19:34.607Z"}
+{"level":"info","message":"Received POST request to /api/dashboards","service":"alert-service","timestamp":"2026-08-01T23:19:34.627Z"}
+{"level":"info","message":"Request body: {\"name\":\"To update\",\"widgets\":[{\"title\":\"Open critical issues\",\"chartType\":\"stat\",\"query\":{\"dataset\":\"issues\",\"aggregate\":\"count\",\"filters\":{\"severity\":\"critical\"},\"timeWindowMinutes\":60}}]}","service":"alert-service","timestamp":"2026-08-01T23:19:34.627Z"}
+{"level":"info","message":"Received PATCH request to /api/dashboards/6a6e7f066c8dc5816782446b","service":"alert-service","timestamp":"2026-08-01T23:19:34.669Z"}
+{"level":"info","message":"Request body: {\"widgets\":[]}","service":"alert-service","timestamp":"2026-08-01T23:19:34.669Z"}
+{"level":"info","message":"Received POST request to /api/dashboards","service":"alert-service","timestamp":"2026-08-01T23:19:34.691Z"}
+{"level":"info","message":"Request body: {\"name\":\"Cross-org\"}","service":"alert-service","timestamp":"2026-08-01T23:19:34.691Z"}
+{"level":"info","message":"Received GET request to /api/dashboards/6a6e7f066c8dc5816782446c","service":"alert-service","timestamp":"2026-08-01T23:19:34.697Z"}
+{"level":"info","message":"Request body: undefined","service":"alert-service","timestamp":"2026-08-01T23:19:34.697Z"}
+{"level":"warn","message":"404 Dashboard not found","service":"alert-service","timestamp":"2026-08-01T23:19:34.701Z"}
+{"level":"info","message":"Received POST request to /api/dashboards","service":"alert-service","timestamp":"2026-08-01T23:19:34.703Z"}
+{"level":"info","message":"Request body: {\"name\":\"To delete\"}","service":"alert-service","timestamp":"2026-08-01T23:19:34.703Z"}
+{"level":"info","message":"Received DELETE request to /api/dashboards/6a6e7f066c8dc5816782446d","service":"alert-service","timestamp":"2026-08-01T23:19:34.706Z"}
+{"level":"info","message":"Request body: undefined","service":"alert-service","timestamp":"2026-08-01T23:19:34.706Z"}
+{"level":"info","message":"Received GET request to /api/dashboards/6a6e7f066c8dc5816782446d","service":"alert-service","timestamp":"2026-08-01T23:19:34.711Z"}
+{"level":"info","message":"Request body: undefined","service":"alert-service","timestamp":"2026-08-01T23:19:34.711Z"}
+{"level":"warn","message":"404 Dashboard not found","service":"alert-service","timestamp":"2026-08-01T23:19:34.713Z"}
+{"level":"warn","message":"Upstream query to /api/issues failed: 400","service":"alert-service","timestamp":"2026-08-01T23:19:35.125Z"}
+{"level":"warn","message":"Upstream query to /api/issues failed: 500","service":"alert-service","timestamp":"2026-08-01T23:19:35.135Z"}
+{"level":"warn","message":"Upstream query to /api/issues errored: fetch failed","service":"alert-service","timestamp":"2026-08-01T23:19:35.137Z"}

@@ -1,6 +1,7 @@
 const { test } = require("node:test");
 const assert = require("node:assert/strict");
 const { spawnSync } = require("node:child_process");
+const os = require("node:os");
 const path = require("node:path");
 
 // Black-box proof that the assertJwtSecret guard is actually wired into
@@ -14,8 +15,17 @@ const path = require("node:path");
 
 const SERVER_ENTRY = path.join(__dirname, "..", "src", "server.js");
 
+// server.js's `require("dotenv").config()` resolves `.env` from the
+// process CWD - spawning from the service directory would silently inject
+// the developer's local .env (JWT_SECRET included) and make the "unset"
+// case boot successfully. Spawn from the OS temp dir (no .env there) so
+// the child sees exactly the env this test constructs, on CI and dev
+// machines alike.
+const SPAWN_CWD = os.tmpdir();
+
 const runWithSecret = (jwtSecret) =>
   spawnSync(process.execPath, [SERVER_ENTRY], {
+    cwd: SPAWN_CWD,
     env: {
       ...process.env,
       JWT_SECRET: jwtSecret,
@@ -31,6 +41,7 @@ test("refuses to boot when JWT_SECRET is unset", () => {
   );
 
   const { status, stdout, stderr } = spawnSync(process.execPath, [SERVER_ENTRY], {
+    cwd: SPAWN_CWD,
     env: envWithoutSecret,
     timeout: 5000,
     encoding: "utf8",

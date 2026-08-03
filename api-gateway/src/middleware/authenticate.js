@@ -15,6 +15,10 @@ const PUBLIC_AUTH_ROUTES = [
   { method: "POST", path: "/v1/auth/refresh-token" },
   { method: "POST", path: "/v1/auth/logout" },
   { method: "PATCH", path: "/v1/auth/update-password" },
+  // Credential-less entry into the shared read-only demo workspace - a way
+  // to *obtain* a token, so it belongs on this list by the same logic as
+  // /login. auth-service itself gates it behind DEMO_LOGIN_ENABLED.
+  { method: "POST", path: "/v1/auth/demo-login" },
 ];
 
 // Exact segment match, not a bare prefix: "/v1/events" or "/v1/events/*"

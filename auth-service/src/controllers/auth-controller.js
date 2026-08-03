@@ -13,6 +13,7 @@ const {
 const {
   MembershipStatus,
   AccountStatus,
+  OrganizationStatus,
   AssignableMemberRoles,
   Permissions,
   RolePermissions,
@@ -21,6 +22,8 @@ const {
   asyncHandler,
   slugify,
 } = require("../utils/constants");
+
+const MAX_USER_AGENT_LENGTH = 512;
 
 const sanitizeUser = (user) => ({
   id: user._id,
@@ -48,11 +51,43 @@ const sanitizeMembership = (membership, permissions) => ({
   joinedAt: membership.joinedAt,
 });
 
+// ---- shared demo-account identity -------------------------------------
+// Read at call time (not module load) so tests and deployments can flip
+// these without a restart-order dependency. Both are also *reserved*:
+// createOrganizationWithAdmin refuses to hand either to a stranger, which
+// is what makes demoLogin's "the demo workspace is ours" assumption true.
+
+const isDemoLoginEnabled = () => process.env.DEMO_LOGIN_ENABLED === "true";
+
+const getDemoOrgSlug = () =>
+  slugify(process.env.DEMO_ORG_SLUG || "crashlens-demo");
+
+const getDemoUserEmail = () =>
+  (process.env.DEMO_USER_EMAIL || "demo@crashlens.online")
+    .trim()
+    .toLowerCase();
+
+const isReservedDemoIdentity = ({ organizationSlug, email }) =>
+  isDemoLoginEnabled() &&
+  ((organizationSlug !== undefined && organizationSlug === getDemoOrgSlug()) ||
+    (email !== undefined && email === getDemoUserEmail()));
+
+// Demo refresh tokens are deliberately short-lived - see demoLogin.
+const getDemoRefreshTokenExpiryDate = () => {
+  const hours = Number(process.env.DEMO_REFRESH_TOKEN_EXPIRES_IN_HOURS || 2);
+  const expiresAt = new Date();
+
+  expiresAt.setHours(expiresAt.getHours() + hours);
+
+  return expiresAt;
+};
+
 const issueTokenPair = async ({
   user,
   membership,
   req,
   tokenFamilyId = null,
+  refreshTokenExpiresAt = null,
 }) => {
   const permissions = RolePermissions[membership.role] || [];
   const accessToken = signAccessToken({
@@ -67,9 +102,11 @@ const issueTokenPair = async ({
     organizationId: membership.organizationId,
     membershipId: membership._id,
     tokenHash: hashToken(refreshToken),
-    expiresAt: getRefreshTokenExpiryDate(),
+    expiresAt: refreshTokenExpiresAt || getRefreshTokenExpiryDate(),
     createdByIp: req.ip,
-    userAgent: req.get("user-agent"),
+    // Truncated: a client-controlled header, stored once per issued token,
+    // on a route (demo-login) anyone can call. See refresh-token-model.js.
+    userAgent: (req.get("user-agent") || "").slice(0, MAX_USER_AGENT_LENGTH) || null,
   });
 
   refreshTokenDoc.tokenFamilyId = tokenFamilyId || refreshTokenDoc._id;
@@ -117,6 +154,20 @@ const createOrganizationWithAdmin = asyncHandler(async (req, res) => {
     password: req.body.admin.password,
   };
   const organizationSlug = slugify(organizationName);
+
+  // The demo org/user identities belong to this deployment, not to whoever
+  // registers first - without this, a stranger could claim the demo slug
+  // before the seed script runs and have every demo-login visitor dropped
+  // into a workspace they control. 409 (not a distinct code) so this
+  // doesn't advertise which names are reserved.
+  if (
+    isReservedDemoIdentity({
+      organizationSlug,
+      email: adminPayload.email.trim().toLowerCase(),
+    })
+  ) {
+    throw new ApiError(409, "Organization already exists");
+  }
 
   const existingOrganization = await Organization.findOne({
     slug: organizationSlug,
@@ -266,6 +317,121 @@ const login = asyncHandler(async (req, res) => {
   });
 });
 
+// Public demo access: one shared, read-only (VIEWER) account inside a
+// pre-provisioned demo organization, entered without credentials. The demo
+// user's password is a random 128-hex string generated here and thrown
+// away, so /login is not a usable door into it. Deliberately does NOT
+// create the demo organization itself: the org (plus its projects/DSN/
+// data) is provisioned by the seed flow (scripts/seed-demo.mjs at the repo
+// root), so an unprovisioned deployment answers 503 instead of silently
+// handing out an empty workspace.
+//
+// Two deliberate non-behaviours, both from the security review:
+//  - The demo org/user identities are reserved (see isReservedDemoIdentity,
+//    enforced in createOrganizationWithAdmin) so a stranger can't register
+//    the demo slug/email first and have every visitor dropped into a
+//    workspace they control.
+//  - Only the demo membership's *role* is self-healed, never its *status*.
+//    Deactivating the membership (or archiving the org) is an operator's
+//    kill switch and must stay effective without a redeploy.
+const demoLogin = asyncHandler(async (req, res) => {
+  if (!isDemoLoginEnabled()) {
+    throw new ApiError(404, "Demo login is not enabled");
+  }
+
+  const organization = await Organization.findOne({
+    slug: getDemoOrgSlug(),
+  }).lean();
+
+  if (!organization) {
+    throw new ApiError(503, "Demo workspace is not provisioned yet");
+  }
+
+  if (organization.status !== OrganizationStatus.ACTIVE) {
+    throw new ApiError(503, "Demo workspace is disabled");
+  }
+
+  const demoEmail = getDemoUserEmail();
+  let user = await User.findOne({ email: demoEmail });
+
+  if (!user) {
+    try {
+      user = await User.create({
+        name: "CrashLens Demo",
+        email: demoEmail,
+        passwordHash: await hashPassword(generateRefreshToken()),
+      });
+    } catch (error) {
+      // Concurrent first-clicks race on the unique email index - the loser
+      // just re-reads the winner's document instead of 500ing.
+      if (error?.code !== 11000) throw error;
+      user = await User.findOne({ email: demoEmail });
+    }
+  }
+
+  if (!user || user.status !== AccountStatus.ACTIVE) {
+    throw new ApiError(503, "Demo account is disabled");
+  }
+
+  let membership = await Membership.findOne({
+    organizationId: organization._id,
+    userId: user._id,
+  });
+
+  if (!membership) {
+    try {
+      membership = await Membership.create({
+        organizationId: organization._id,
+        userId: user._id,
+        role: Roles.VIEWER,
+      });
+    } catch (error) {
+      // Same race, on the {organizationId, userId} compound unique index.
+      if (error?.code !== 11000) throw error;
+      membership = await Membership.findOne({
+        organizationId: organization._id,
+        userId: user._id,
+      });
+    }
+  }
+
+  if (!membership || membership.status !== MembershipStatus.ACTIVE) {
+    // Operator kill switch - deliberately NOT self-healed.
+    throw new ApiError(503, "Demo account is disabled");
+  }
+
+  if (membership.role !== Roles.VIEWER) {
+    // Role, on the other hand, is forced: this is a shared public account
+    // and must never hold a role that can mutate the demo workspace.
+    membership.role = Roles.VIEWER;
+    await membership.save();
+  }
+
+  const tokenPair = await issueTokenPair({
+    user,
+    membership,
+    req,
+    // Demo sessions are anonymous and unbounded in number - don't leave a
+    // 15-day refresh token per click sitting in the DB.
+    refreshTokenExpiresAt: getDemoRefreshTokenExpiryDate(),
+  });
+
+  logger.info(
+    `Demo login issued for organization ${organization._id} (user ${user._id})`,
+  );
+
+  return res.status(200).json({
+    success: true,
+    message: "Demo login successful",
+    data: {
+      user: sanitizeUser(user),
+      membership: sanitizeMembership(membership, tokenPair.permissions),
+      accessToken: tokenPair.accessToken,
+      refreshToken: tokenPair.refreshToken,
+    },
+  });
+});
+
 const createOrganizationMember = asyncHandler(async (req, res) => {
   if (req.user.organizationId !== req.params.organizationId) {
     throw new ApiError(403, "Permission denied for this organization");
@@ -337,18 +503,36 @@ const createOrganizationMember = asyncHandler(async (req, res) => {
   });
 });
 
+// Change-password, NOT a forgot-password reset. `currentPassword` is the
+// proof of identity - the same bar /login clears - so this route can stay
+// gateway-public (a user who knows their password but isn't signed in can
+// still use it) without being an account-takeover primitive.
+//
+// SECURITY (fixed after the Module 1-9 reviews): this used to accept
+// { email, newPassword } with no proof of ownership at all, so anyone who
+// knew an account's email address could set its password and log in as
+// that user. Never reintroduce an ownership-free write to passwordHash
+// here. A true "I forgot my password" flow needs an emailed, single-use,
+// expiring reset token - that does not exist yet, and this route is not a
+// substitute for it.
 const updatePassword = asyncHandler(async (req, res) => {
-  console.log("req.body", req.body);
   const email = req.body.email;
+  const user = await User.findOne({ email }).select("+passwordHash");
 
-  if (email === "") {
-    throw new ApiError(500, "email is required");
-  }
-  const user = await User.findOne({ email });
-  console.log("user ", user);
-
+  // Uniform error for "no such user", "inactive user", and "wrong current
+  // password" - don't let this route double as an account-existence oracle.
   if (!user || user.status !== AccountStatus.ACTIVE) {
-    throw new ApiError(401, "Authentication session is no longer active");
+    throw new ApiError(401, "Invalid email or password");
+  }
+
+  const currentPasswordMatches = await verifyPassword(
+    req.body.currentPassword,
+    user.passwordHash,
+  );
+
+  if (!currentPasswordMatches) {
+    logger.warn(`Failed password-change attempt for email ${email}`);
+    throw new ApiError(401, "Invalid email or password");
   }
 
   user.passwordHash = await hashPassword(req.body.newPassword);
@@ -703,6 +887,7 @@ module.exports = {
   updateOrganizationMemberRole,
   updatePassword,
   login,
+  demoLogin,
   refreshAccessToken,
   revokeRefreshToken,
   Permissions,

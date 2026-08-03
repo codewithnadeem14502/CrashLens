@@ -36,6 +36,10 @@ app.use((req, res, next) => {
 // spending effort on JWT verification), then JWT verification (additive on
 // top of each service's own auth check; exempts ingestion and the public
 // auth routes - see middleware/authenticate.js).
+// Route-specific limiter first: demo-login is the one unauthenticated
+// route that writes per call, so it gets a far tighter budget than the
+// global one (see middleware/rateLimiter.js).
+app.post("/v1/auth/demo-login", rateLimiter.demoLoginRateLimiter);
 app.use(rateLimiter);
 app.use(authenticate);
 
