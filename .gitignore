@@ -7,3 +7,7 @@ node_modules
 .env
 **/.env
 !.env.deploy.example
+
+# Written by scripts/seed-demo.mjs (mode 0600): demo project DSN, monitor
+# checkToken, and the demo org admin password. All three are live credentials.
+.demo-credentials

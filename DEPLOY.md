@@ -60,7 +60,7 @@ and `www.crashlens.online`.
 - Confirm the M0 (or higher) cluster exists. **Rotate the DB user's password** if it was
   ever shared outside a secrets manager.
 - Atlas → **Network Access** → **Add IP Address** → enter the VM's public IP explicitly
-  (typing it in, not "Add Current IP Address" - that button adds *your* machine's IP,
+  (typing it in, not "Add Current IP Address" - that button adds _your_ machine's IP,
   not the VM's). This is the single most common first-deploy failure: every service
   will crash-loop with `MongooseServerSelectionError` / "IP isn't whitelisted" until this
   is done, even though the connection string itself is correct. `auth-service` and
@@ -68,7 +68,7 @@ and `www.crashlens.online`.
   route doesn't check DB connectivity, so a green status there is not proof Mongo is
   actually reachable. After adding the IP, `docker compose restart <affected services>`
   to skip the automatic retry backoff.
-- You only need the *base* connection string (no db name) - `docker-compose.yml` appends
+- You only need the _base_ connection string (no db name) - `docker-compose.yml` appends
   `/<service-name>?retryWrites=false&appName=Cluster0` per service.
 
 ## 4. Get the code onto the VM
@@ -97,6 +97,7 @@ cp .env.deploy.example .env
 ```
 
 Fill in `.env`:
+
 - `DOMAIN` - the subdomain pointed at the VM, e.g. `api.crashlens.online`.
 - `MONGODB_BASE_URI` - Atlas base string (no db name, no trailing slash).
 - `JWT_SECRET` - generate directly on the VM so it's never typed/pasted anywhere:
@@ -104,7 +105,17 @@ Fill in `.env`:
   compose file already fans this one value out to all six of them.
 - `CORS_ALLOWED_ORIGINS` - comma-separated exact origins allowed to call the gateway
   from a browser, e.g. `https://crash-lens-client.vercel.app,https://crashlens.online,https://www.crashlens.online`.
+- `PUBLIC_DSN_HOST` - optional, **defaults to `DOMAIN`**, which is almost always right.
+  It's the host segment of every project DSN the dashboard displays
+  (`crashlens://<key>@<host>/<projectId>`) - i.e. where a customer's app posts events,
+  so it must be the public gateway origin, never a service's internal port. Only set it
+  explicitly if ingestion is served from a different hostname than the rest of the API.
+  The DSN is rebuilt from stored parts on every read, so correcting this fixes existing
+  projects immediately - no regenerate, no key rotation, nothing to migrate.
 - SMTP block - optional, only if you want alert-service email notifications.
+- Demo block - optional. `DEMO_LOGIN_ENABLED=true` turns on `POST /v1/auth/demo-login`
+  (the client's "Try the live demo" button). Enabling the flag is only half of it - see
+  step 6a, the endpoint answers 503 until the demo org is provisioned.
 
 ## 6. Bring it up
 
@@ -121,6 +132,39 @@ boot (`process.exit(1)` on connect failure by design) - check Atlas Network Acce
 rather than trusting `docker compose ps`'s health column alone (see step 3's note on
 `/health` not checking DB connectivity).
 
+## 6a. Provision the shared demo workspace (only if `DEMO_LOGIN_ENABLED=true`)
+
+`demo-login` never creates the demo organization itself - it answers **503** until one
+exists, so a deployment with the flag on but nothing seeded shows visitors an error.
+Seed it once, from the VM or any machine that can reach the gateway:
+
+```
+node scripts/seed-demo.mjs https://<DOMAIN>
+```
+
+Idempotent (safe to re-run), uses only the public `/v1` API and Node built-ins - no
+`npm install`, no DB access. It creates the demo org + admin, a project, a cron and an
+uptime monitor, a dashboard, and an alert rule, then verifies demo-login end to end.
+
+Credentials go to a `0600` `.demo-credentials` file next to where you ran it (**never
+stdout** - that would put a live DSN and the admin password into shell history and any
+CI/container log). Store the generated `SEED_ADMIN_PASSWORD` somewhere safe: re-runs
+need it passed back in as `SEED_ADMIN_PASSWORD=... node scripts/seed-demo.mjs ...`.
+
+The workspace starts empty of _events_, by design - the demo is meant to show real SDK
+traffic, not fabricated rows. Point an instrumented app at the `CRASHLENS_DSN` from
+`.demo-credentials` and exercise it to fill in issues/logs/transactions.
+
+Two things become reserved while the flag is on: nobody can register an organization
+whose slug matches `DEMO_ORG_SLUG`, or an admin user with `DEMO_USER_EMAIL`. That's
+deliberate - without it a stranger could claim the demo identity before the seeder ran
+and have every visitor land in a workspace they control.
+
+To turn the demo off: `DEMO_LOGIN_ENABLED=false` + `docker compose up -d auth-service`.
+To disable it _without_ a redeploy, deactivate the demo membership from the members UI -
+the endpoint self-heals the demo account's role but deliberately never its status, so a
+deactivated membership stays the operator's kill switch.
+
 ## 7. Point the frontend at it (Vercel)
 
 1. Vercel project settings → Environment Variables → `VITE_API_BASE_URL=https://<DOMAIN>/v1`
@@ -130,7 +174,7 @@ rather than trusting `docker compose ps`'s health column alone (see step 3's not
    → **Add** → enter the apex (`crashlens.online`) and/or `www` subdomain. Vercel shows
    the exact DNS records it needs (usually an A record for the apex, a CNAME for `www`)
    - copy those exact values into Namecheap's Advanced DNS, replacing the default parking
-   records from step 2. Wait for Vercel's domain status to show verified.
+     records from step 2. Wait for Vercel's domain status to show verified.
 3. Once the frontend's real origin(s) are live, make sure `CORS_ALLOWED_ORIGINS` in the
    backend `.env` (step 5) lists them exactly, then
    `docker compose up -d` (recreates only the changed service, api-gateway).
@@ -164,7 +208,19 @@ rather than trusting `docker compose ps`'s health column alone (see step 3's not
   `ssh -L 15672:localhost:15672 root@<vm-ip>`, then open `http://localhost:15672`.
 - `rabbitmq_data`/`redis_data` are named Docker volumes with no external backup - both
   hold only in-flight/derived state, so this is an accepted tradeoff, not an oversight.
-- Redeploy after a code change: `git pull && docker compose up -d --build`.
+- Redeploy after a code change: `git pull && docker compose up -d --build`. There is **no
+  CI/CD** - pushing to GitHub deploys nothing on its own, this SSH step is the deploy.
+  (The Vercel-hosted frontend is the exception: it rebuilds on push to its own repo.)
+- **Deploy the backend before the frontend** when a change spans both. The
+  password-change route is the current example: the client now sends `currentPassword`,
+  and both sides reject unexpected shapes (`.unknown(false)` on the Joi schema), so an
+  old-backend/new-frontend pairing 400s in the gap. Backend-first fails closed - the old
+  frontend just can't change passwords for a few minutes - while frontend-first ships a
+  form that's broken for everyone until the backend catches up.
+- After pulling a change that adds env vars, update `.env` from `.env.deploy.example`
+  _before_ `docker compose up` - compose substitutes missing `${VAR}`s with an empty
+  string, and a service that boot-guards on one (every JWT verifier does) will
+  crash-loop rather than start misconfigured.
 - Any credential that ever gets pasted somewhere insecure (chat, screenshot, a public
   issue) should be treated as compromised and rotated, even if it "still works" -
   including the SSH key, Atlas password, and JWT_SECRET this deployment used.

@@ -139,9 +139,28 @@ const getProjectCacheKey = ({ organizationId, projectId }) =>
 const getProjectListCacheKey = ({ organizationId, includeArchived }) =>
   `project-service:project-list:${organizationId}:includeArchived=${includeArchived}`;
 
+// The DSN is rebuilt from its stored parts on every read rather than
+// echoing the stored `dsn` string. The host segment comes from
+// PUBLIC_DSN_HOST, which is a property of the *deployment*, not of the
+// project - a project created before the service knew its public hostname
+// (or created on a host that later moved) would otherwise keep handing out
+// a stale DSN forever, since the stored string was frozen at creation
+// time. Deriving here means changing PUBLIC_DSN_HOST fixes every existing
+// project at once, with no migration and no key rotation.
+//
+// Safe because nothing authenticates on the host segment: ingestion
+// validates {projectId, dsnPublicKey} against event-service's DsnCache
+// (see event-controller.js), and the SDK only checks that a host is
+// present, never connects to it - the ingestion URL is the SDK's own
+// `endpoint` option.
 const buildProjectDsnPayload = (project) => ({
   projectId: project._id.toString(),
-  dsn: project.dsn,
+  dsn: project.dsnPublicKey
+    ? buildDsn({
+        publicKey: project.dsnPublicKey,
+        projectId: project._id.toString(),
+      })
+    : project.dsn,
 });
 
 const canUseRedis = () => redisClient.status === "ready";
@@ -558,10 +577,7 @@ const regenerateProjectDsn = asyncHandler(async (req, res) => {
   return res.status(200).json({
     success: true,
     message: "Project DSN regenerated successfully",
-    data: {
-      projectId: project._id,
-      dsn: project.dsn,
-    },
+    data: buildProjectDsnPayload(project),
   });
 });
 

@@ -66,6 +66,16 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRES_IN: 5m
       REFRESH_TOKEN_EXPIRES_IN_DAYS: 15
+      # Credential-less shared demo account (POST /v1/auth/demo-login), the
+      # client's "Try the live demo" button. Off unless DEMO_LOGIN_ENABLED
+      # is exactly "true". The demo org is NOT created by this service -
+      # provision it once with scripts/seed-demo.mjs, or demo-login answers
+      # 503. The slug/email below are reserved once this is enabled: nobody
+      # can register an org or admin using them.
+      DEMO_LOGIN_ENABLED: ${DEMO_LOGIN_ENABLED:-false}
+      DEMO_ORG_SLUG: ${DEMO_ORG_SLUG:-crashlens-demo}
+      DEMO_USER_EMAIL: ${DEMO_USER_EMAIL:-demo@crashlens.online}
+      DEMO_REFRESH_TOKEN_EXPIRES_IN_HOURS: ${DEMO_REFRESH_TOKEN_EXPIRES_IN_HOURS:-2}
     healthcheck:
       test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:3001/health"]
       interval: 15s
@@ -90,6 +100,12 @@ services:
       ACCESS_TOKEN_ISSUER: crash-lens-auth-service
       JWT_EXPIRES_IN: 5m
       REFRESH_TOKEN_EXPIRES_IN_DAYS: 15
+      # Host written into every project DSN shown in the dashboard - this is
+      # where a customer's app sends events, so it must be this deployment's
+      # public gateway origin. Without it, DSNs read "localhost:3000" and are
+      # useless to anyone. Applied on read, so setting it fixes existing
+      # projects too (no regenerate, no key rotation).
+      PUBLIC_DSN_HOST: ${PUBLIC_DSN_HOST:-${DOMAIN}}
     healthcheck:
       test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:3002/health"]
       interval: 15s
