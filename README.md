@@ -20,7 +20,7 @@ CrashLens is an error monitoring and observability platform for application erro
 
 ## Demo Video
 
-<iframe src="https://drive.google.com/file/d/1DB5bKsM9FHf403SGB3jhtedCxcbz1oLI/view?usp=drive_link" width="640" height="360" allow="autoplay" allowfullscreen></iframe>
+[![CrashLens demo video](https://drive.google.com/thumbnail?id=1DB5bKsM9FHf403SGB3jhtedCxcbz1oLI&sz=w1280)](https://drive.google.com/file/d/1DB5bKsM9FHf403SGB3jhtedCxcbz1oLI/view?usp=sharing)
 
 ## Architecture
 
